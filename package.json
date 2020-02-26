@@ -10,7 +10,8 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:extension.helloWorld"
+		"workspaceContains:**/pom.xml",
+		"workspaceContains:**/build.xml"
 	],
 	"main": "./out/extension.js",
 	"contributes": {

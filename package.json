@@ -15,10 +15,47 @@
 	],
 	"main": "./out/extension.js",
 	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "gzoltar-commands",
+					"title": "GZoltar",
+					"icon": "media/dep.svg"
+				}
+			]
+		},
+		"views": {
+			"gzoltar-commands": [
+				{
+					"id": "gzoltar",
+					"name": "Commands"
+				}
+			]
+		},
 		"commands": [
 			{
-				"command": "extension.helloWorld",
-				"title": "Hello World"
+				"command": "gzoltar.run",
+				"title": "Run Test Methods",
+				"icon": {
+					"light": "resources/light/boolean.svg",
+					"dark": "resources/dark/boolean.svg"
+				}
+			},
+			{
+				"command": "gzoltar.report",
+				"title": "Generate Report",
+				"icon": {
+					"light": "resources/light/document.svg",
+					"dark": "resources/dark/document.svg"
+				}
+			},
+			{
+				"command": "gzoltar.show",
+				"title": "Show HTML Views",
+				"icon": {
+					"light": "resources/light/string.svg",
+					"dark": "resources/dark/string.svg"
+				}
 			}
 		]
 	},

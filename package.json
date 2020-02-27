@@ -34,6 +34,14 @@
 		},
 		"commands": [
 			{
+				"command": "gzoltar.clean",
+				"title": "Clean Project",
+				"icon": {
+					"light": "resources/light/refresh.svg",
+					"dark": "resources/dark/refresh.svg"
+				}
+			},
+			{
 				"command": "gzoltar.run",
 				"title": "Run Test Methods",
 				"icon": {
@@ -79,5 +87,8 @@
 		"mocha": "^7.0.1",
 		"typescript": "^3.7.5",
 		"vscode-test": "^1.3.0"
+	},
+	"dependencies": {
+		"maven": "^4.7.0"
 	}
 }

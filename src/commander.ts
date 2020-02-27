@@ -9,11 +9,12 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     }
 
     buildCommander() {
+        const cleanCommand = new GZoltarCommand('Clean Project', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.clean', title: ''});
         const runTestCommand = new GZoltarCommand('Run Test Methods', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.run', title: ''});
         const reportCommand = new GZoltarCommand('Generate Report', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.report', title: ''});
         const showviewCommand = new GZoltarCommand('Show View', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.show', title: ''});
 
-        this.commands.push(runTestCommand, reportCommand, showviewCommand);
+        this.commands.push(cleanCommand, runTestCommand, reportCommand, showviewCommand);
     }  
 
     getTreeItem(element: GZoltarCommand): vscode.TreeItem | Thenable<vscode.TreeItem> {

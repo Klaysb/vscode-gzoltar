@@ -3,13 +3,16 @@
 import * as vscode from 'vscode';
 import { exec } from 'child_process';
 import { GZoltarCommander } from './commander';
+import * as path from 'path';
 
 export function activate(context: vscode.ExtensionContext) {
 
 	const workspaceFolders = vscode.workspace.workspaceFolders;
 	const workspace = workspaceFolders != undefined? workspaceFolders[0].uri.fsPath : ''; //TODO
 
-	const mvn = ""; //TODO
+	const mvn = path.join(__filename, '..', '..', 'tools', 'maven', 'apache-maven-3.6.3', 'bin');
+	const gz = path.join(__filename, '..', '..', 'tools', 'gzoltar');
+	const junit = path.join(__filename, '..', '..', 'tools', 'junit');
 	const commander = new GZoltarCommander();
 
 	vscode.window.registerTreeDataProvider('gzoltar', commander);
@@ -26,7 +29,9 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.commands.registerCommand('gzoltar.run', () => {
 		vscode.window.showInformationMessage('Run was activated.');
 
-		exec(`(cd ${workspace} && ${mvn}/mvn -P sufire gzoltar:prepare-agent test)`, (err, stdout, stderr) => {
+		//${mvn}/mvn -P sufire gzoltar:prepare-agent test
+		//cd ${workspace} &&
+		exec(`(java -cp ${workspace};${junit}/junit-4.13.jar;${gz}/gzoltarcli.jar com.gzoltar.cli.Main listTestMethods ${workspace}/target/test-classes/org/gzoltar/examples --outputFile ${workspace}/target/a.txt)`, (err, stdout, stderr) => {
 			if(err) return vscode.window.showErrorMessage(err.message);
 			vscode.window.showInformationMessage('Run completed.')
 		})

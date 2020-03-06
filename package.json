@@ -34,8 +34,8 @@
 		},
 		"commands": [
 			{
-				"command": "gzoltar.clean",
-				"title": "Clean Project",
+				"command": "gzoltar.list",
+				"title": "List Test Methods",
 				"icon": {
 					"light": "resources/light/refresh.svg",
 					"dark": "resources/dark/refresh.svg"

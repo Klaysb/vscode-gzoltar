@@ -1,9 +1,10 @@
 'use strict'
 
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { exec } from 'child_process';
 import { GZoltarCommander } from './commander';
-import { readFile } from 'fs';
+import { readFile, fstat, readFileSync } from 'fs';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -45,10 +46,17 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.commands.registerCommand('gzoltar.show', () => {
 		vscode.window.showInformationMessage('Show was activated.');
 
-		readFile(`${toolsPath}/sfl/html/ochiai/sunburst.html`, (err, data) => {
+		// `${toolsPath}/sfl/html/ochiai/sunburst.html`
+		readFile(`${workspace}/target/site/gzoltar/sfl/html/ochiai/sunburst.html`, (err, data) => {
 			if (err) throw err;
 			const html = data.toString();
-			const webview = vscode.window.createWebviewPanel(
+
+			const scriptPathOnDisk = vscode.Uri.file(
+				path.join(workspace, "target", "site", "gzoltar", "sfl", "html", "ochiai", "gzoltar.js")
+			);
+			const gzoltarScr = readFileSync(path.join(workspace, "target", "site", "gzoltar", "sfl", "html", "ochiai", "gzoltar.js")).toString();
+
+			const panel = vscode.window.createWebviewPanel(
 				'report',
 				'Report',
 				vscode.ViewColumn.Beside,
@@ -57,7 +65,8 @@ export function activate(context: vscode.ExtensionContext) {
 					localResourceRoots: [vscode.Uri.file(toolsPath)]
 				}
 			);
-			webview.webview.html = html;
+			const scriptUri = panel.webview.asWebviewUri(scriptPathOnDisk);
+			panel.webview.html = html.replace('<script type="text/javascript" src="gzoltar.js"></script>', ` <script>${gzoltarScr}</script>`);
 		  });
 	});
 }

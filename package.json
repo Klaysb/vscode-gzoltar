@@ -88,5 +88,8 @@
 		"typescript": "^3.7.5",
 		"vscode-test": "^1.3.0"
 	},
-	"dependencies": {}
+	"dependencies": {
+		"@types/fs-extra": "^8.1.0",
+		"fs-extra": "^9.0.0"
+	}
 }

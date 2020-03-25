@@ -4,13 +4,14 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { exec } from 'child_process';
 import { GZoltarCommander } from './commander';
-import { readFile, fstat, readFileSync } from 'fs';
+import { readFile, readFileSync } from 'fs';
+import { FileMaster } from './filemaster';
 
 export function activate(context: vscode.ExtensionContext) {
 
 	const workspaceFolders = vscode.workspace.workspaceFolders;
 	const workspace = workspaceFolders != undefined? workspaceFolders[0].uri.fsPath : ''; //TODO
-
+	const fm = new FileMaster();
 	const toolsPath = `${context.extensionPath}/tools`
 	const commander = new GZoltarCommander();
 

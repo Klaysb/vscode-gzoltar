@@ -1,9 +1,9 @@
 import * as vscode from 'vscode'
 
 export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand> {
-
+    
+    workspace: String = '';
     commands: GZoltarCommand[] = []
-
     constructor() {
         this.buildCommander();
     }
@@ -15,7 +15,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         const showviewCommand = new GZoltarCommand('Show View', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.show', title: ''});
 
         this.commands.push(listCommand, runTestCommand, reportCommand, showviewCommand);
-    }  
+    }
 
     getTreeItem(element: GZoltarCommand): vscode.TreeItem | Thenable<vscode.TreeItem> {
         return element;
@@ -29,7 +29,17 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         return Promise.resolve(element.children);
     }
 
+    runTestMethods() {
 
+    }
+
+    generateReport() {
+
+    }
+
+    showView() {
+        // depends on previous methods
+    }
 }
 
 export class GZoltarCommand extends vscode.TreeItem {

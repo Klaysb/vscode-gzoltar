@@ -3,7 +3,7 @@ import * as path from 'path';
 import { exec } from 'child_process';
 import { readFile, readFileSync } from 'fs';
 
-export class MavenRunner implements IGZRunner {
+export class MavenRunner {
 
 	workspace = vscode.workspace.workspaceFolders != undefined? vscode.workspace.workspaceFolders[0].uri.fsPath : ''; //TODO
 

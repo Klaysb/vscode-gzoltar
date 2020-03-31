@@ -1,49 +1,63 @@
-import { workspace } from "vscode";
-import * as path from 'path';
 import * as fs from 'fs';
-import * as fse from 'fs-extra';
-import { exec } from 'child_process';
-import { readFile, readFileSync } from 'fs';
+import * as glob from 'glob';
 
-enum FolderStruct {
-    Maven = '/target/classes',
-    Gradle = '/build/classes/java/main',
-    Ant = '',
-    Default = '.'
+class BuildPair {
+    readonly srcFolder: string;
+    readonly testFolder: string;
+
+    constructor(sourceFolder: string, testFolder: string) {
+        this.srcFolder = sourceFolder;
+        this.testFolder = testFolder;
+    }
+}
+
+const BuildPairs: { [index: string] : BuildPair } = {
+    'maven': new BuildPair('/target/classes', '/target/test-classes'),
+    'gradle': new BuildPair('/build/classes/java/main', ''),
+    'ant': new BuildPair('', ''),
+    'bazel': new BuildPair('', '')
+}
+
+function getFiles(dir: string, prefix: string): string[] {
+    const result = fs.readdirSync(dir);
+    let filelist = Array<string>();
+    for(const file of result) {
+        if (fs.statSync(dir + '/' + file).isDirectory()){
+            filelist = filelist.concat(getFiles(dir + '/' + file, prefix + file + '.'));
+        }
+        else {
+            filelist.push(prefix + file);
+        }
+    }
+    return filelist;
 }
 
 export class FileMaster {
 
-    currentStruct: FolderStruct = FolderStruct.Default;
-    currentWorkspace: string = '';
+    readonly currentBuild: BuildPair;
+    readonly currentWorkspace: string;
 
-    async isJavaProject(): Promise<boolean> {
-
-        if (!workspace.workspaceFolders || workspace.workspaceFolders.length === 0) {
-            return false;
-        }
-
-        for (const workspaceFolder of workspace.workspaceFolders) {
-            if (await this.isJavaFolder(workspaceFolder.uri.fsPath)) {
-                this.currentWorkspace = workspaceFolder.uri.fsPath;
-                return true;
-            }
-        }
-
-        return false;
+    constructor(buildTool: string, workspace: string) {
+        this.currentBuild = BuildPairs[buildTool];
+        this.currentWorkspace = workspace;
     }
 
-    async isJavaFolder(folderPath: string): Promise<boolean> {
-        return await fse.pathExists(path.join(folderPath, 'pom.xml')) 
-            || await fse.pathExists(path.join(folderPath, 'build.gradle')) 
-            || await fse.pathExists(path.join(folderPath, 'build.xml'));
+    getWorkspace(): string {
+        return this.currentWorkspace;
     }
 
-    getIncludes(folder: string) : string[] {
-        fs.readdir(folder, (err, files) => {
-            if (err) return console.error(err.message);
-            console.log('y');
-        });
-        return [];
+    getSourceFolder(): string {
+        return this.currentBuild.srcFolder;
+    }
+
+    getTestFolder(): string {
+        return this.currentBuild.testFolder;
+    }
+
+    getIncludes(): string {
+        const r = getFiles(this.currentWorkspace + this.currentBuild.srcFolder, '')
+                    .map(f => f.replace(/.class/g, ''))
+                    .join(':');
+        return r;
     }
 }

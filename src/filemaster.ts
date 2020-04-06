@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as glob from 'glob';
+import * as fse from 'fs-extra';
 
 class BuildPair {
     readonly srcFolder: string;
@@ -18,12 +19,14 @@ const BuildPairs: { [index: string] : BuildPair } = {
     'bazel': new BuildPair('', '')
 }
 
-function getFiles(dir: string, prefix: string): string[] {
-    const result = fs.readdirSync(dir);
+async function getFiles(dir: string, prefix: string): Promise<string[]> {
+    const result = await fse.readdir(dir);
     let filelist = Array<string>();
+
     for(const file of result) {
-        if (fs.statSync(dir + '/' + file).isDirectory()){
-            filelist = filelist.concat(getFiles(dir + '/' + file, prefix + file + '.'));
+        if ((await fse.stat(dir + '/' + file)).isDirectory()){
+            const subFiles = await getFiles(dir + '/' + file, prefix + file + '.');
+            filelist = filelist.concat(subFiles);
         }
         else {
             filelist.push(prefix + file);
@@ -54,10 +57,15 @@ export class FileMaster {
         return this.currentBuild.testFolder;
     }
 
-    getIncludes(): string {
-        const r = getFiles(this.currentWorkspace + this.currentBuild.srcFolder, '')
-                    .map(f => f.replace(/.class/g, ''))
-                    .join(':');
-        return r;
+    async getIncludes(): Promise<string> {
+        return (await getFiles(this.currentWorkspace + this.currentBuild.srcFolder, ''))
+                .map(f => f.replace(/.class/g, ''))
+                .join(':');
+    }
+
+    async copyToBuild(dest: string): Promise<void> {
+        const options = { overwrite: false };
+        await fse.copy(this.currentWorkspace + this.currentBuild.srcFolder, dest, options);
+        await fse.copy(this.currentWorkspace + this.currentBuild.testFolder, dest, options);
     }
 }

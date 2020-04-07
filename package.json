@@ -35,8 +35,8 @@
 		},
 		"commands": [
 			{
-				"command": "gzoltar.list",
-				"title": "List Test Methods",
+				"command": "gzoltar.cleanup",
+				"title": "Cleanup Previous Runs",
 				"icon": {
 					"light": "resources/light/refresh.svg",
 					"dark": "resources/dark/refresh.svg"

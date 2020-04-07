@@ -1,5 +1,3 @@
-import * as fs from 'fs';
-import * as glob from 'glob';
 import * as fse from 'fs-extra';
 
 class BuildPair {
@@ -25,7 +23,7 @@ async function getFiles(dir: string, prefix: string): Promise<string[]> {
 
     for(const file of result) {
         if ((await fse.stat(dir + '/' + file)).isDirectory()){
-            const subFiles = await getFiles(dir + '/' + file, prefix + file + '.');
+            const subFiles = await getFiles(`${dir}/${file}`, `${prefix + file}.`);
             filelist = filelist.concat(subFiles);
         }
         else {

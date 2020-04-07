@@ -1,92 +1,30 @@
 'use strict'
 
 import * as vscode from 'vscode';
-import * as path from 'path';
-import { exec } from 'child_process';
-import { GZoltarCommander } from './commander';
-import { readFile, readFileSync } from 'fs';
-import { FileMaster } from './filemaster';
 import * as fse from 'fs-extra';
+import * as path from 'path';
+import { FileMaster } from './filemaster';
+import { GZoltarCommander } from './commander';
 
 export async function activate(context: vscode.ExtensionContext) {
 
-	const toolsPath = path.join(context.extensionPath, 'tools');
-	const buildPath = path.join(toolsPath, 'build');
-	const fm = await createFM();
-	const commander = new GZoltarCommander();
-
-	// await fse.emptyDir(buildPath); // cleanup of any previous executions
-	// await fse.emptyDir(`${toolsPath}/sfl`);
-	// await fse.remove(`${toolsPath}/tests.txt`);
-	// await fse.remove(`${toolsPath}/gzoltar.ser`);
+	const filemaster = await createFileMaster();
+	const commander = new GZoltarCommander(filemaster, context);
 
 	vscode.window.registerTreeDataProvider('gzoltar', commander);
 
-	vscode.commands.registerCommand('gzoltar.list', () => {
-		vscode.window.showInformationMessage('List was activated.');
+	vscode.commands.registerCommand('gzoltar.cleanup', async () => await commander.cleanup())
 
-		exec(`(cd ${toolsPath} && java -javaagent:"gzoltaragent.jar" -cp "${fm.getWorkspace() + fm.getTestFolder()}":"junit-4.13.jar":"gzoltarcli.jar" com.gzoltar.cli.Main listTestMethods ${fm.getWorkspace()})`, (err, stdout, stderr) => {
-			if(err) return vscode.window.showErrorMessage(err.message);
-			vscode.window.showInformationMessage('List completed.')
-		})
-	});
+	vscode.commands.registerCommand('gzoltar.run', async () => await commander.runTestMethods());
 
-	vscode.commands.registerCommand('gzoltar.run', async () => {
-		vscode.window.showInformationMessage('Run was activated.');
+	vscode.commands.registerCommand('gzoltar.report', async () => await commander.generateReport());
 
-		const correctRun = "java -javaagent:gzoltaragent.jar=includes=\"org.gzoltar.examples.CharacterCounter:org.gzoltar.examples.StaticField\" -cp \"build/\":junit-4.13.jar:hamcrest-core-2.2.jar:gzoltarcli.jar com.gzoltar.cli.Main runTestMethods --testMethods \"tests.txt\" --collectCoverage";
-
-		await fm.copyToBuild(buildPath);
-		const includes = await fm.getIncludes();
-
-		const s = `(cd ${toolsPath} && java -javaagent:gzoltaragent.jar=includes="${includes}" -cp "${buildPath}":"junit-4.13.jar":"hamcrest-core-2.2.jar":"gzoltarcli.jar" com.gzoltar.cli.Main runTestMethods --testMethods "tests.txt" --collectCoverage)`;
-		exec(`(cd ${toolsPath} && java -javaagent:gzoltaragent.jar=includes="${includes}" -cp "build/":"junit-4.13.jar":"hamcrest-core-2.2.jar":"gzoltarcli.jar" com.gzoltar.cli.Main runTestMethods --testMethods "tests.txt" --collectCoverage)`, (err, stdout, stderr) => {
-			if(err) return vscode.window.showErrorMessage(err.message);
-			vscode.window.showInformationMessage('Run completed.')
-		});
-	});
-
-	vscode.commands.registerCommand('gzoltar.report', () => {
-		vscode.window.showInformationMessage('Report was activated.');
-		const correctReport = "java -cp .:junit-4.13.jar:hamcrest-core-2.2.jar:gzoltarcli.jar com.gzoltar.cli.Main faultLocalizationReport --buildLocation \"build/\" --granularity \"line\" --dataFile gzoltar.ser --family \"sfl\" --formula \"ochiai\" --outputDirectory . --formatter \"html\"";
-
-		exec(`(cd ${toolsPath} && java -cp ".":"junit-4.13.jar":"hamcrest-core-2.2.jar":"gzoltarcli.jar" com.gzoltar.cli.Main faultLocalizationReport --buildLocation "build/" --granularity "line" --dataFile gzoltar.ser --family "sfl" --formula "ochiai" --outputDirectory . --formatter HTML)`, (err, stdout, stderr) => {
-			if(err) return vscode.window.showErrorMessage(err.message);
-			vscode.window.showInformationMessage('Report completed.')
-		});
-	});
-
-	vscode.commands.registerCommand('gzoltar.show', () => {
-		vscode.window.showInformationMessage('Show was activated.');
-
-		// `${toolsPath}/sfl/html/ochiai/sunburst.html`
-		readFile(`${toolsPath}/sfl/html/ochiai/sunburst.html`, (err, data) => {
-			if (err) throw err;
-			const html = data.toString();
-
-			const scriptPathOnDisk = vscode.Uri.file(
-				path.join(toolsPath, "sfl", "html", "ochiai", "gzoltar.js")
-			);
-			const gzoltarScr = readFileSync(path.join(toolsPath, "sfl", "html", "ochiai", "gzoltar.js")).toString();
-
-			const panel = vscode.window.createWebviewPanel(
-				'report',
-				'Report',
-				vscode.ViewColumn.Beside,
-				{
-					enableScripts: true,
-					localResourceRoots: [vscode.Uri.file(toolsPath)]
-				}
-			);
-			const scriptUri = panel.webview.asWebviewUri(scriptPathOnDisk);
-			panel.webview.html = html.replace('<script type="text/javascript" src="gzoltar.js"></script>', ` <script>${gzoltarScr}</script>`);
-		  });
-	});
+	vscode.commands.registerCommand('gzoltar.show', async () => await commander.showView());
 }
 
 export function deactivate() {}
 
-async function createFM(): Promise<FileMaster> {
+async function createFileMaster(): Promise<FileMaster> {
 	if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
 		throw new Error('Unable to locate workspace, extension has been incorrectly activated.');
 	}

@@ -6,6 +6,15 @@ import util = require('util');
 const exec = util.promisify(require('child_process').exec);
 
 export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand> {
+
+    readonly listFunction = (destPath: string, buildPath: string, resPath: string) => 
+        `(cd ${destPath} && java -javaagent:"gzoltaragent.jar" -cp "${buildPath}":"junit-4.13.jar":"gzoltarcli.jar" com.gzoltar.cli.Main listTestMethods ${resPath})`;
+
+    readonly runFunction = (destPath: string, includes: string) =>
+        `(cd ${destPath} && java -javaagent:gzoltaragent.jar=includes="${includes}" -cp "build/":"junit-4.13.jar":"hamcrest-core-2.2.jar":"gzoltarcli.jar" com.gzoltar.cli.Main runTestMethods --testMethods "tests.txt" --collectCoverage)`
+
+    readonly reportFunction = (destPath: string) =>
+        `(cd ${destPath} && java -cp ".":"junit-4.13.jar":"hamcrest-core-2.2.jar":"gzoltarcli.jar" com.gzoltar.cli.Main faultLocalizationReport --buildLocation "build/" --granularity "line" --dataFile gzoltar.ser --family "sfl" --formula "ochiai" --outputDirectory . --formatter HTML)`;
     
     commands: GZoltarCommand[];
     filemaster: FileMaster;
@@ -40,31 +49,30 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     }
 
     async cleanup() {
-        await fse.emptyDir(this.buildPath);
-        await fse.emptyDir(`${this.toolsPath}/sfl`);
-        await fse.remove(`${this.toolsPath}/tests.txt`);
-        await fse.remove(`${this.toolsPath}/gzoltar.ser`);
+        await Promise.all([
+            fse.emptyDir(this.buildPath), fse.emptyDir(`${this.toolsPath}/sfl`),
+            fse.remove(`${this.toolsPath}/tests.txt`), fse.remove(`${this.toolsPath}/gzoltar.ser`)]);
     }
 
     async runTestMethods() {
         vscode.window.showInformationMessage('List was activated.');
         
         await fse.remove(`${this.toolsPath}/tests.txt`);
-        const { err0, stdout0, stderr0 } = await exec(`(cd ${this.toolsPath} && java -javaagent:"gzoltaragent.jar" -cp "${this.filemaster.getWorkspace() + this.filemaster.getTestFolder()}":"junit-4.13.jar":"gzoltarcli.jar" com.gzoltar.cli.Main listTestMethods ${this.filemaster.getWorkspace()})`);
+        const { err0, stdout0, stderr0 } = await exec(this.listFunction(this.toolsPath, this.filemaster.getWorkspace() + this.filemaster.getTestFolder(), this.filemaster.getWorkspace()));
         if(err0) return vscode.window.showErrorMessage(err0.message);
 
         await fse.remove(`${this.toolsPath}/gzoltar.ser`);
         await this.filemaster.copyToBuild(this.buildPath);
         const includes = await this.filemaster.getIncludes();
         
-        const { err, stdout, stderr } = await exec(`(cd ${this.toolsPath} && java -javaagent:gzoltaragent.jar=includes="${includes}" -cp "build/":"junit-4.13.jar":"hamcrest-core-2.2.jar":"gzoltarcli.jar" com.gzoltar.cli.Main runTestMethods --testMethods "tests.txt" --collectCoverage)`);
+        const { err, stdout, stderr } = await exec(this.runFunction(this.toolsPath, includes));
         if(err) return vscode.window.showErrorMessage(err.message);
         
         vscode.window.showInformationMessage('Run completed.')
     }
 
     async generateReport() {
-        const { err, stdout, stderr } = await exec(`(cd ${this.toolsPath} && java -cp ".":"junit-4.13.jar":"hamcrest-core-2.2.jar":"gzoltarcli.jar" com.gzoltar.cli.Main faultLocalizationReport --buildLocation "build/" --granularity "line" --dataFile gzoltar.ser --family "sfl" --formula "ochiai" --outputDirectory . --formatter HTML)`);
+        const { err, stdout, stderr } = await exec(this.reportFunction(this.toolsPath));
         if(err) return vscode.window.showErrorMessage(err.message);
         vscode.window.showInformationMessage('Report completed.')
     }

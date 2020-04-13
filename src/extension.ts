@@ -9,7 +9,7 @@ import { GZoltarCommander } from './commander';
 export async function activate(context: vscode.ExtensionContext) {
 
 	const filemaster = await createFileMaster();
-	const commander = new GZoltarCommander(filemaster, context);
+	const commander = new GZoltarCommander(filemaster, context.extensionPath);
 
 	vscode.window.registerTreeDataProvider('gzoltar', commander);
 

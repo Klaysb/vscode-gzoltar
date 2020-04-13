@@ -7,6 +7,10 @@ const exec = util.promisify(require('child_process').exec);
 
 export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand> {
 
+    /**
+     * Functions returning the fully constructed GZoltar command with the correct parameters.
+     */
+
     readonly listFunction = (destPath: string, buildPath: string, resPath: string) => 
         `(cd ${destPath} && java -javaagent:"gzoltaragent.jar" -cp "${buildPath}":"junit-4.13.jar":"gzoltarcli.jar" com.gzoltar.cli.Main listTestMethods ${resPath})`;
 
@@ -16,15 +20,18 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     readonly reportFunction = (destPath: string) =>
         `(cd ${destPath} && java -cp ".":"junit-4.13.jar":"hamcrest-core-2.2.jar":"gzoltarcli.jar" com.gzoltar.cli.Main faultLocalizationReport --buildLocation "build/" --granularity "line" --dataFile gzoltar.ser --family "sfl" --formula "ochiai" --outputDirectory . --formatter HTML)`;
     
-    commands: GZoltarCommand[];
-    filemaster: FileMaster;
+    /**
+     * GZoltarCommander fields
+     */
 
+    readonly commands: GZoltarCommand[];
+    readonly fileMaster: FileMaster;
     readonly toolsPath: string;
 	readonly buildPath: string;
 
-    constructor(filemaster: FileMaster, context: vscode.ExtensionContext) {
-        this.filemaster = filemaster;
-        this.toolsPath = path.join(context.extensionPath, 'tools');
+    constructor(fileMaster: FileMaster, extensionPath: string) {
+        this.fileMaster = fileMaster;
+        this.toolsPath = path.join(extensionPath, 'tools');
         this.buildPath = path.join(this.toolsPath, 'build');
         this.commands = this.buildCommander();
     }
@@ -58,12 +65,12 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         vscode.window.showInformationMessage('List was activated.');
         
         await fse.remove(`${this.toolsPath}/tests.txt`);
-        const { err0, stdout0, stderr0 } = await exec(this.listFunction(this.toolsPath, this.filemaster.getWorkspace() + this.filemaster.getTestFolder(), this.filemaster.getWorkspace()));
+        const { err0, stdout0, stderr0 } = await exec(this.listFunction(this.toolsPath, this.fileMaster.getWorkspace() + this.fileMaster.getTestFolder(), this.fileMaster.getWorkspace()));
         if(err0) return vscode.window.showErrorMessage(err0.message);
 
         await fse.remove(`${this.toolsPath}/gzoltar.ser`);
-        await this.filemaster.copyToBuild(this.buildPath);
-        const includes = await this.filemaster.getIncludes();
+        await this.fileMaster.copyToBuild(this.buildPath);
+        const includes = await this.fileMaster.getIncludes();
         
         const { err, stdout, stderr } = await exec(this.runFunction(this.toolsPath, includes));
         if(err) return vscode.window.showErrorMessage(err.message);

@@ -66,7 +66,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         
         await fse.remove(`${this.toolsPath}/tests.txt`);
         const { err0, stdout0, stderr0 } = await exec(this.listFunction(this.toolsPath, this.fileMaster.getWorkspace() + this.fileMaster.getTestFolder(), this.fileMaster.getWorkspace()));
-        if(err0) return vscode.window.showErrorMessage(err0.message);
+        if(err0) return vscode.window.showErrorMessage(err0.message); //TODO error handler
 
         await fse.remove(`${this.toolsPath}/gzoltar.ser`);
         await this.fileMaster.copyToBuild(this.buildPath);
@@ -86,28 +86,28 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
 
     async showView() {
         // depends on previous methods
+        const data = await fse.readFile(`${this.toolsPath}/sfl/html/ochiai/sunburst.html`);
+        const html = data.toString();
 
-		fse.readFile(`${this.toolsPath}/sfl/html/ochiai/sunburst.html`, (err, data) => {
-			if (err) throw err;
-			const html = data.toString();
+        const scriptPathOnDisk = vscode.Uri.file(
+            path.join(this.toolsPath, "sfl", "html", "ochiai", "gzoltar.js")
+        );
 
-			const scriptPathOnDisk = vscode.Uri.file(
-				path.join(this.toolsPath, "sfl", "html", "ochiai", "gzoltar.js")
-			);
-			const gzoltarScr = fse.readFileSync(path.join(this.toolsPath, "sfl", "html", "ochiai", "gzoltar.js")).toString();
+        const gzoltarScr = (await fse.readFile(path.join(this.toolsPath, "sfl", "html", "ochiai", "gzoltar.js"))).toString();
+        const sunScr = (await fse.readFile(path.join(this.toolsPath, "sfl", "html", "ochiai", "sun.js"))).toString();
 
-			const panel = vscode.window.createWebviewPanel(
-				'report',
-				'Report',
-				vscode.ViewColumn.Beside,
-				{
-					enableScripts: true,
-					localResourceRoots: [vscode.Uri.file(this.toolsPath)]
-				}
-			);
-			const scriptUri = panel.webview.asWebviewUri(scriptPathOnDisk);
-			panel.webview.html = html.replace('<script type="text/javascript" src="gzoltar.js"></script>', ` <script>${gzoltarScr}</script>`);
-		});
+        const panel = vscode.window.createWebviewPanel(
+            'report',
+            'Report',
+            vscode.ViewColumn.Beside,
+            {
+                enableScripts: true,
+                localResourceRoots: [vscode.Uri.file(this.toolsPath)]
+            }
+        );
+        const scriptUri = panel.webview.asWebviewUri(scriptPathOnDisk);
+        panel.webview.html = html.replace('<script type="text/javascript" src="gzoltar.js"></script>', ` <script>${gzoltarScr}</script><script>${sunScr}</script>`);
+        //TODO replace d3 script with a fixed one
     }
 }
 

@@ -12,7 +12,7 @@ class BuildPair {
 
 const BuildPairs: { [index: string] : BuildPair } = {
     'maven': new BuildPair('/target/classes', '/target/test-classes'),
-    'gradle': new BuildPair('/build/classes/java/main', ''),
+    'gradle': new BuildPair('/build/classes/java/main', '/build/classes/test/main'),
     'ant': new BuildPair('', ''),
     'bazel': new BuildPair('', '')
 }

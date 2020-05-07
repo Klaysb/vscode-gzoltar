@@ -12,10 +12,10 @@ class BuildPair {
 
 const BuildPairs: { [index: string] : BuildPair } = {
     'maven': new BuildPair('/target/classes', '/target/test-classes'),
-    'gradle': new BuildPair('/build/classes/java/main', '/build/classes/test/main'),
+    'gradle': new BuildPair('/build/classes/java/main', '/build/classes/java/test'),
     'ant': new BuildPair('', ''),
     'bazel': new BuildPair('', '')
-}
+};
 
 async function getFiles(dir: string, prefix: string): Promise<string[]> {
     const result = await fse.readdir(dir);

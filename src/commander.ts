@@ -1,4 +1,4 @@
-import * as vscode from 'vscode'
+import * as vscode from 'vscode';
 import { FileMaster } from './filemaster';
 import * as path from 'path';
 import * as fse from 'fs-extra';
@@ -15,7 +15,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         `(cd ${destPath} && java -javaagent:"gzoltaragent.jar" -cp "${buildPath}":"junit-4.13.jar":"gzoltarcli.jar" com.gzoltar.cli.Main listTestMethods ${resPath})`;
 
     readonly runFunction = (destPath: string, includes: string) =>
-        `(cd ${destPath} && java -javaagent:gzoltaragent.jar=includes="${includes}" -cp "build/":"junit-4.13.jar":"hamcrest-core-2.2.jar":"gzoltarcli.jar" com.gzoltar.cli.Main runTestMethods --testMethods "tests.txt" --collectCoverage)`
+        `(cd ${destPath} && java -javaagent:gzoltaragent.jar=includes="${includes}" -cp "build/":"junit-4.13.jar":"hamcrest-core-2.2.jar":"gzoltarcli.jar" com.gzoltar.cli.Main runTestMethods --testMethods "tests.txt" --collectCoverage)`;
 
     readonly reportFunction = (destPath: string) =>
         `(cd ${destPath} && java -cp ".":"junit-4.13.jar":"hamcrest-core-2.2.jar":"gzoltarcli.jar" com.gzoltar.cli.Main faultLocalizationReport --buildLocation "build/" --granularity "line" --dataFile gzoltar.ser --family "sfl" --formula "ochiai" --outputDirectory . --formatter HTML)`;
@@ -59,29 +59,36 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         await Promise.all([
             fse.emptyDir(this.buildPath), fse.emptyDir(`${this.toolsPath}/sfl`),
             fse.remove(`${this.toolsPath}/tests.txt`), fse.remove(`${this.toolsPath}/gzoltar.ser`)]);
+        
+        vscode.window.showInformationMessage('Cleanup completed.');
     }
 
     async runTestMethods() {
-        vscode.window.showInformationMessage('List was activated.');
         
         await fse.remove(`${this.toolsPath}/tests.txt`);
         const { err0, stdout0, stderr0 } = await exec(this.listFunction(this.toolsPath, this.fileMaster.getWorkspace() + this.fileMaster.getTestFolder(), this.fileMaster.getWorkspace()));
-        if(err0) return vscode.window.showErrorMessage(err0.message); //TODO error handler
+        if(err0) {
+            return vscode.window.showErrorMessage(err0.message); //TODO error handler
+        }
 
         await fse.remove(`${this.toolsPath}/gzoltar.ser`);
         await this.fileMaster.copyToBuild(this.buildPath);
         const includes = await this.fileMaster.getIncludes();
         
         const { err, stdout, stderr } = await exec(this.runFunction(this.toolsPath, includes));
-        if(err) return vscode.window.showErrorMessage(err.message);
+        if(err) {
+            return vscode.window.showErrorMessage(err.message);
+        }
         
-        vscode.window.showInformationMessage('Run completed.')
+        vscode.window.showInformationMessage('Run completed.');
     }
 
     async generateReport() {
         const { err, stdout, stderr } = await exec(this.reportFunction(this.toolsPath));
-        if(err) return vscode.window.showErrorMessage(err.message);
-        vscode.window.showInformationMessage('Report completed.')
+        if(err) {
+            return vscode.window.showErrorMessage(err.message);
+        }
+        vscode.window.showInformationMessage('Report completed.');
     }
 
     async showView() {
@@ -94,7 +101,6 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         );
 
         const gzoltarScr = (await fse.readFile(path.join(this.toolsPath, "sfl", "html", "ochiai", "gzoltar.js"))).toString();
-        const sunScr = (await fse.readFile(path.join(this.toolsPath, "sfl", "html", "ochiai", "sun.js"))).toString();
 
         const panel = vscode.window.createWebviewPanel(
             'report',
@@ -106,20 +112,20 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
             }
         );
         const scriptUri = panel.webview.asWebviewUri(scriptPathOnDisk);
-        panel.webview.html = html.replace('<script type="text/javascript" src="gzoltar.js"></script>', ` <script>${gzoltarScr}</script><script>${sunScr}</script>`);
+        panel.webview.html = html.replace('<script type="text/javascript" src="gzoltar.js"></script>', ` <script>${gzoltarScr}</script>`);
         //TODO replace d3 script with a fixed one
     }
 }
 
 export class GZoltarCommand extends vscode.TreeItem {
 
-    public children: GZoltarCommand[] = []
+    public children: GZoltarCommand[] = [];
 
     constructor(
         public readonly label: string, 
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
         public readonly command?: vscode.Command
     ) {
-        super(label, collapsibleState)
+        super(label, collapsibleState);
     }
 }

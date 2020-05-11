@@ -17,6 +17,20 @@
 	],
 	"main": "./out/extension.js",
 	"contributes": {
+		"menus": {
+			"explorer/context": [
+				{
+					"command": "gzoltar.setsource",
+					"group": "gzoltar",
+					"when": "explorerResourceIsFolder"
+				},
+				{
+					"command": "gzoltar.settest",
+					"group": "gzoltar",
+					"when": "explorerResourceIsFolder"
+				}
+			]
+		},
 		"viewsContainers": {
 			"activitybar": [
 				{
@@ -35,6 +49,14 @@
 			]
 		},
 		"commands": [
+			{
+				"command": "gzoltar.setsource",
+				"title": "GZoltar: Set Source Folder"
+			},
+			{
+				"command": "gzoltar.settest",
+				"title": "GZoltar: Set Test Folder"
+			},
 			{
 				"command": "gzoltar.cleanup",
 				"title": "Cleanup Previous Runs",

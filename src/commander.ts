@@ -114,6 +114,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         const scriptUri = panel.webview.asWebviewUri(scriptPathOnDisk);
         panel.webview.html = html.replace('<script type="text/javascript" src="gzoltar.js"></script>', ` <script>${gzoltarScr}</script>`);
         //TODO replace d3 script with a fixed one
+        //TODO save instance of webview so no duplicates are created
     }
 }
 

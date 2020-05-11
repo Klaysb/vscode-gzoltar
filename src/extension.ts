@@ -13,6 +13,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	vscode.window.registerTreeDataProvider('gzoltar', commander);
 
+	vscode.commands.registerCommand('gzoltar.setsource', (args) => {
+		const s = '';
+	});
+
+	vscode.commands.registerCommand('gzoltar.settest', (args) => {
+		const s = '';
+	});
+
 	vscode.commands.registerCommand('gzoltar.cleanup', async () => await commander.cleanup());
 
 	vscode.commands.registerCommand('gzoltar.run', async () => await commander.runTestMethods());

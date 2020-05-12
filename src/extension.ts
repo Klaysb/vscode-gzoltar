@@ -1,24 +1,27 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import * as fse from 'fs-extra';
-import * as path from 'path';
 import { FileMaster } from './filemaster';
 import { GZoltarCommander } from './commander';
 
 export async function activate(context: vscode.ExtensionContext) {
-	
-	const filemaster = await createFileMaster();
+
+	if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
+		throw new Error('Unable to locate workspace, extension has been incorrectly activated.');
+	}
+
+	const workspace = vscode.workspace.workspaceFolders[0];
+	const filemaster = new FileMaster(workspace.uri.fsPath);
 	const commander = new GZoltarCommander(filemaster, context.extensionPath);
 
 	vscode.window.registerTreeDataProvider('gzoltar', commander);
 
 	vscode.commands.registerCommand('gzoltar.setsource', (args) => {
-		const s = '';
+		filemaster.setSourceFolder(args.path);
 	});
 
 	vscode.commands.registerCommand('gzoltar.settest', (args) => {
-		const s = '';
+		filemaster.setTestFolder(args.path);
 	});
 
 	vscode.commands.registerCommand('gzoltar.cleanup', async () => await commander.cleanup());
@@ -31,31 +34,3 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {}
-
-async function createFileMaster(): Promise<FileMaster> {
-	if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
-		throw new Error('Unable to locate workspace, extension has been incorrectly activated.');
-	}
-
-	for (const workspaceFolder of vscode.workspace.workspaceFolders) {
-		const res = await getBuildTool(workspaceFolder.uri.fsPath);
-		if (res !== '') {
-			return new FileMaster(res, workspaceFolder.uri.fsPath);
-		}
-	}
-
-	throw new Error('Unable to locate build tool in workspaces, extension has been incorrectly activated.');
-}	
-
-async function getBuildTool(folderPath: string): Promise<string> {
-	if (await fse.pathExists(path.join(folderPath, 'pom.xml'))) {
-		return 'maven';
-	}
-	if (await fse.pathExists(path.join(folderPath, 'build.gradle'))) {
-		return 'gradle';
-	}
-	if (await fse.pathExists(path.join(folderPath, 'build.xml'))) {
-		return 'ant';
-	}
-	return '';
-}

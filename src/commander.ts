@@ -37,6 +37,8 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     }
 
     buildCommander(): GZoltarCommand[] {
+        // process.platform
+        // path.sep
         const listCommand = new GZoltarCommand('Cleanup', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.cleanup', title: ''});
         const runTestCommand = new GZoltarCommand('Run Test Methods', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.run', title: ''});
         const reportCommand = new GZoltarCommand('Generate Report', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.report', title: ''});
@@ -66,13 +68,13 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     async runTestMethods() {
         
         await fse.remove(`${this.toolsPath}/tests.txt`);
-        const { err0, stdout0, stderr0 } = await exec(this.listFunction(this.toolsPath, this.fileMaster.getWorkspace() + this.fileMaster.getTestFolder(), this.fileMaster.getWorkspace()));
+        const { err0, stdout0, stderr0 } = await exec(this.listFunction(this.toolsPath, this.fileMaster.getTestFolder(), this.fileMaster.getWorkspace()));
         if(err0) {
             return vscode.window.showErrorMessage(err0.message); //TODO error handler
         }
 
         await fse.remove(`${this.toolsPath}/gzoltar.ser`);
-        await this.fileMaster.copyToBuild(this.buildPath);
+        await this.fileMaster.copyTo(this.buildPath);
         const includes = await this.fileMaster.getIncludes();
         
         const { err, stdout, stderr } = await exec(this.runFunction(this.toolsPath, includes));

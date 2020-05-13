@@ -16,7 +16,7 @@ export class FileMaster {
     private sourceFolder: string;
     private testFolder: string;
 
-    constructor(workspace: string, srcFolder: string = '', testFolder: string = '') {
+    private constructor(workspace: string, srcFolder: string = '', testFolder: string = '') {
         this.currentWorkspace = workspace;
         this.configFile = join(this.currentWorkspace, FileMaster.CONFIG_FOLDER, FileMaster.CONFIG_FILE);
         this.sourceFolder = srcFolder;

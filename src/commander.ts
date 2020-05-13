@@ -42,6 +42,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     buildCommander(): GZoltarCommand[] {
         // process.platform
         // path.sep
+        //TODO TITLE
         const listCommand = new GZoltarCommand('Cleanup', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.cleanup', title: ''});
         const runTestCommand = new GZoltarCommand('Run Test Methods', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.run', title: ''});
         const reportCommand = new GZoltarCommand('Generate Report', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.report', title: ''});

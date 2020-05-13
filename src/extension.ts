@@ -33,4 +33,4 @@ export async function activate(context: vscode.ExtensionContext) {
 	vscode.commands.registerCommand('gzoltar.reset', async () => await commander.resetConfig());
 }
 
-export function deactivate() {}
+export function deactivate() { }

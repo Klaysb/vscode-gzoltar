@@ -5,24 +5,12 @@ import { join } from 'path';
 import * as fse from 'fs-extra';
 import util = require('util');
 import { FileMaster } from './filemaster';
+import { listFunction, runFunction, reportFunction } from './cmdBuilder';
 const exec = util.promisify(require('child_process').exec);
 
 
 export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand> {
 
-    /**
-     * Functions returning the fully constructed GZoltar command with the correct parameters.
-     */
-
-    private readonly listFunction = (destPath: string, buildPath: string, resPath: string) => 
-        `(cd ${destPath} && java -javaagent:"gzoltaragent.jar" -cp "${buildPath}":"gzoltarcli.jar" com.gzoltar.cli.Main listTestMethods ${resPath})`;
-
-    private readonly runFunction = (destPath: string, includes: string) =>
-        `(cd ${destPath} && java -javaagent:gzoltaragent.jar=includes="${includes}" -cp "build/":"junit-4.13.jar":"hamcrest-core-2.2.jar":"gzoltarcli.jar" com.gzoltar.cli.Main runTestMethods --testMethods "tests.txt" --collectCoverage)`;
-
-    private readonly reportFunction = (destPath: string) =>
-        `(cd ${destPath} && java -cp ".":"gzoltarcli.jar" com.gzoltar.cli.Main faultLocalizationReport --buildLocation "build/" --granularity "line" --dataFile gzoltar.ser --family "sfl" --formula "ochiai" --outputDirectory . --formatter HTML)`;
-    
     /**
      * GZoltarCommander fields
      */
@@ -30,7 +18,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     private readonly commands: GZoltarCommand[];
     private readonly fileMaster: FileMaster;
     private readonly configPath: string;
-	private readonly buildPath: string;
+    private readonly buildPath: string;
 
     constructor(fileMaster: FileMaster) {
         this.fileMaster = fileMaster;
@@ -47,9 +35,9 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
             // TODO update commander
         });
 
-        const runTestCommand = new GZoltarCommand('Run GZoltar', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.run', title: ''});
-        const showViewCommand = new GZoltarCommand('Show Views', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.show', title: ''});
-        const resetCommand = new GZoltarCommand('Reset Config', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.reset', title: ''});
+        const runTestCommand = new GZoltarCommand('Run GZoltar', vscode.TreeItemCollapsibleState.None, { command: 'gzoltar.run', title: '' });
+        const showViewCommand = new GZoltarCommand('Show Views', vscode.TreeItemCollapsibleState.None, { command: 'gzoltar.show', title: '' });
+        const resetCommand = new GZoltarCommand('Reset Config', vscode.TreeItemCollapsibleState.None, { command: 'gzoltar.reset', title: '' });
         return [runTestCommand, showViewCommand, resetCommand];
     }
 
@@ -76,17 +64,17 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
 
     private async cleanup(): Promise<void> {
         await Promise.all([
-            fse.emptyDir(this.buildPath), 
+            fse.emptyDir(this.buildPath),
             fse.emptyDir(join(this.configPath, 'sfl')),
-            fse.remove(join(this.configPath, 'tests.txt')), 
+            fse.remove(join(this.configPath, 'tests.txt')),
             fse.remove(join(this.configPath, 'gzoltar.ser'))
         ]);
     }
-    
+
     private async list(): Promise<void> {
         await fse.remove(join(this.configPath, 'tests.txt'));
-        return exec(this.listFunction(this.configPath, this.fileMaster.getTestFolder(), this.fileMaster.getWorkspace()))
-            .then(() => {})
+        return exec(listFunction(this.configPath, this.fileMaster.getTestFolder(), this.fileMaster.getWorkspace()))
+            .then(() => { })
             .catch((err: any) => {
                 const e = '';
             });
@@ -97,16 +85,16 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         await this.fileMaster.copySourcesTo(this.buildPath);
 
         const includes = await this.fileMaster.getIncludes();
-        return exec(this.runFunction(this.configPath, includes))
-            .then(() => {})
+        return exec(runFunction(this.configPath, includes))
+            .then(() => { })
             .catch((err: any) => {
                 const e = '';
             });
     }
 
     private async report(): Promise<void> {
-        return exec(this.reportFunction(this.configPath))
-            .then(() => {})
+        return exec(reportFunction(this.configPath))
+            .then(() => { })
             .catch((e: Error) => {
                 const a = '';
             });
@@ -149,7 +137,7 @@ export class GZoltarCommand extends vscode.TreeItem {
     public children: GZoltarCommand[] = [];
 
     constructor(
-        public readonly label: string, 
+        public readonly label: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
         public readonly command?: vscode.Command
     ) {

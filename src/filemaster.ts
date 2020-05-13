@@ -51,8 +51,8 @@ export class FileMaster {
 
     async getIncludes(): Promise<string> {
         return (await this.getFiles(join(this.currentWorkspace, this.sourceFolder), ''))
-                .map(f => f.replace(/.class/g, ''))
-                .join(':');
+            .map(f => f.replace(/.class/g, ''))
+            .join(':');
     }
 
     async copySourcesTo(dest: string): Promise<void> {
@@ -64,9 +64,9 @@ export class FileMaster {
     private async getFiles(dir: string, prefix: string): Promise<string[]> {
         const result = await fse.readdir(dir);
         let filelist = Array<string>();
-    
-        for(const file of result) {
-            if ((await fse.stat(dir + '/' + file)).isDirectory()){
+
+        for (const file of result) {
+            if ((await fse.stat(dir + '/' + file)).isDirectory()) {
                 const subFiles = await this.getFiles(`${dir}/${file}`, `${prefix + file}.`);
                 filelist = filelist.concat(subFiles);
             }

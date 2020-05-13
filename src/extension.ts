@@ -1,18 +1,20 @@
 'use strict';
 
 import * as vscode from 'vscode';
+import { join } from 'path';
 import { FileMaster } from './filemaster';
 import { GZoltarCommander } from './commander';
 
 export async function activate(context: vscode.ExtensionContext) {
 
 	if (!vscode.workspace.workspaceFolders || vscode.workspace.workspaceFolders.length === 0) {
-		throw new Error('Unable to locate workspace, extension has been incorrectly activated.');
+		throw new Error('Unable to locate workspace, extension has been activated incorrectly.');
 	}
 
-	const workspace = vscode.workspace.workspaceFolders[0];
-	const filemaster = new FileMaster(workspace.uri.fsPath);
-	const commander = new GZoltarCommander(filemaster, context.extensionPath);
+	const workspace = vscode.workspace.workspaceFolders[0].uri.fsPath;
+	const toolsPath = join(context.extensionPath, 'tools');
+	const filemaster = await FileMaster.createFileMaster(workspace, toolsPath);
+	const commander = new GZoltarCommander(filemaster);
 
 	vscode.window.registerTreeDataProvider('gzoltar', commander);
 

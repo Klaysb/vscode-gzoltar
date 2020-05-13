@@ -1,9 +1,12 @@
+'use strict';
+
 import * as vscode from 'vscode';
-import { FileMaster } from './filemaster';
-import * as path from 'path';
+import { join } from 'path';
 import * as fse from 'fs-extra';
 import util = require('util');
+import { FileMaster } from './filemaster';
 const exec = util.promisify(require('child_process').exec);
+
 
 export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand> {
 
@@ -11,28 +14,28 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
      * Functions returning the fully constructed GZoltar command with the correct parameters.
      */
 
-    readonly listFunction = (destPath: string, buildPath: string, resPath: string) => 
+    private readonly listFunction = (destPath: string, buildPath: string, resPath: string) => 
         `(cd ${destPath} && java -javaagent:"gzoltaragent.jar" -cp "${buildPath}":"junit-4.13.jar":"gzoltarcli.jar" com.gzoltar.cli.Main listTestMethods ${resPath})`;
 
-    readonly runFunction = (destPath: string, includes: string) =>
+    private readonly runFunction = (destPath: string, includes: string) =>
         `(cd ${destPath} && java -javaagent:gzoltaragent.jar=includes="${includes}" -cp "build/":"junit-4.13.jar":"hamcrest-core-2.2.jar":"gzoltarcli.jar" com.gzoltar.cli.Main runTestMethods --testMethods "tests.txt" --collectCoverage)`;
 
-    readonly reportFunction = (destPath: string) =>
+    private readonly reportFunction = (destPath: string) =>
         `(cd ${destPath} && java -cp ".":"junit-4.13.jar":"hamcrest-core-2.2.jar":"gzoltarcli.jar" com.gzoltar.cli.Main faultLocalizationReport --buildLocation "build/" --granularity "line" --dataFile gzoltar.ser --family "sfl" --formula "ochiai" --outputDirectory . --formatter HTML)`;
     
     /**
      * GZoltarCommander fields
      */
 
-    readonly commands: GZoltarCommand[];
-    readonly fileMaster: FileMaster;
-    readonly toolsPath: string;
-	readonly buildPath: string;
+    private readonly commands: GZoltarCommand[];
+    private readonly fileMaster: FileMaster;
+    private readonly configPath: string;
+	private readonly buildPath: string;
 
-    constructor(fileMaster: FileMaster, extensionPath: string) {
+    constructor(fileMaster: FileMaster) {
         this.fileMaster = fileMaster;
-        this.toolsPath = path.join(extensionPath, 'tools');
-        this.buildPath = path.join(this.toolsPath, 'build');
+        this.configPath = fileMaster.getConfig();
+        this.buildPath = join(this.configPath, 'build');
         this.commands = this.buildCommander();
     }
 
@@ -59,25 +62,25 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
 
     async cleanup() {
         await Promise.all([
-            fse.emptyDir(this.buildPath), fse.emptyDir(`${this.toolsPath}/sfl`),
-            fse.remove(`${this.toolsPath}/tests.txt`), fse.remove(`${this.toolsPath}/gzoltar.ser`)]);
+            fse.emptyDir(this.buildPath), fse.emptyDir(join(this.configPath, 'sfl')),
+            fse.remove(`${this.configPath}/tests.txt`), fse.remove(join(this.configPath, 'gzoltar.ser'))]);
         
         vscode.window.showInformationMessage('Cleanup completed.');
     }
 
     async runTestMethods() {
         
-        await fse.remove(`${this.toolsPath}/tests.txt`);
-        const { err0, stdout0, stderr0 } = await exec(this.listFunction(this.toolsPath, this.fileMaster.getTestFolder(), this.fileMaster.getWorkspace()));
+        await fse.remove(`${this.configPath}/tests.txt`);
+        const { err0, stdout0, stderr0 } = await exec(this.listFunction(this.configPath, this.fileMaster.getTestFolder(), this.fileMaster.getWorkspace()));
         if(err0) {
             return vscode.window.showErrorMessage(err0.message); //TODO error handler
         }
 
-        await fse.remove(`${this.toolsPath}/gzoltar.ser`);
+        await fse.remove(`${this.configPath}/gzoltar.ser`);
         await this.fileMaster.copyTo(this.buildPath);
         const includes = await this.fileMaster.getIncludes();
         
-        const { err, stdout, stderr } = await exec(this.runFunction(this.toolsPath, includes));
+        const { err, stdout, stderr } = await exec(this.runFunction(this.configPath, includes));
         if(err) {
             return vscode.window.showErrorMessage(err.message);
         }
@@ -86,7 +89,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     }
 
     async generateReport() {
-        const { err, stdout, stderr } = await exec(this.reportFunction(this.toolsPath));
+        const { err, stdout, stderr } = await exec(this.reportFunction(this.configPath));
         if(err) {
             return vscode.window.showErrorMessage(err.message);
         }
@@ -95,14 +98,14 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
 
     async showView() {
         // depends on previous methods
-        const data = await fse.readFile(`${this.toolsPath}/sfl/html/ochiai/sunburst.html`);
+        const data = await fse.readFile(`${this.configPath}/sfl/html/ochiai/sunburst.html`);
         const html = data.toString();
 
         const scriptPathOnDisk = vscode.Uri.file(
-            path.join(this.toolsPath, "sfl", "html", "ochiai", "gzoltar.js")
+            join(this.configPath, "sfl", "html", "ochiai", "gzoltar.js")
         );
 
-        const gzoltarScr = (await fse.readFile(path.join(this.toolsPath, "sfl", "html", "ochiai", "gzoltar.js"))).toString();
+        const gzoltarScr = (await fse.readFile(join(this.configPath, "sfl", "html", "ochiai", "gzoltar.js"))).toString();
 
         const panel = vscode.window.createWebviewPanel(
             'report',
@@ -110,7 +113,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
             vscode.ViewColumn.Beside,
             {
                 enableScripts: true,
-                localResourceRoots: [vscode.Uri.file(this.toolsPath)]
+                localResourceRoots: [vscode.Uri.file(this.configPath)]
             }
         );
         const scriptUri = panel.webview.asWebviewUri(scriptPathOnDisk);

@@ -55,7 +55,7 @@ export class FileMaster {
                 .join(':');
     }
 
-    async copyTo(dest: string): Promise<void> {
+    async copySourcesTo(dest: string): Promise<void> {
         const options = { overwrite: false };
         await fse.copy(join(this.currentWorkspace, this.sourceFolder), dest, options);
         await fse.copy(join(this.currentWorkspace, this.testFolder), dest, options);

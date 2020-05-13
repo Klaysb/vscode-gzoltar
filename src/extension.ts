@@ -26,13 +26,11 @@ export async function activate(context: vscode.ExtensionContext) {
 		await filemaster.setTestFolder(args.path);
 	});
 
-	vscode.commands.registerCommand('gzoltar.cleanup', async () => await commander.cleanup());
+	vscode.commands.registerCommand('gzoltar.run', async () => await commander.run());
 
-	vscode.commands.registerCommand('gzoltar.run', async () => await commander.runTestMethods());
+	vscode.commands.registerCommand('gzoltar.show', async () => await commander.showViews());
 
-	vscode.commands.registerCommand('gzoltar.report', async () => await commander.generateReport());
-
-	vscode.commands.registerCommand('gzoltar.show', async () => await commander.showView());
+	vscode.commands.registerCommand('gzoltar.reset', async () => await commander.resetConfig());
 }
 
 export function deactivate() {}

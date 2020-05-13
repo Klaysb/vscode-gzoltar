@@ -15,13 +15,13 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
      */
 
     private readonly listFunction = (destPath: string, buildPath: string, resPath: string) => 
-        `(cd ${destPath} && java -javaagent:"gzoltaragent.jar" -cp "${buildPath}":"junit-4.13.jar":"gzoltarcli.jar" com.gzoltar.cli.Main listTestMethods ${resPath})`;
+        `(cd ${destPath} && java -javaagent:"gzoltaragent.jar" -cp "${buildPath}":"gzoltarcli.jar" com.gzoltar.cli.Main listTestMethods ${resPath})`;
 
     private readonly runFunction = (destPath: string, includes: string) =>
         `(cd ${destPath} && java -javaagent:gzoltaragent.jar=includes="${includes}" -cp "build/":"junit-4.13.jar":"hamcrest-core-2.2.jar":"gzoltarcli.jar" com.gzoltar.cli.Main runTestMethods --testMethods "tests.txt" --collectCoverage)`;
 
     private readonly reportFunction = (destPath: string) =>
-        `(cd ${destPath} && java -cp ".":"junit-4.13.jar":"hamcrest-core-2.2.jar":"gzoltarcli.jar" com.gzoltar.cli.Main faultLocalizationReport --buildLocation "build/" --granularity "line" --dataFile gzoltar.ser --family "sfl" --formula "ochiai" --outputDirectory . --formatter HTML)`;
+        `(cd ${destPath} && java -cp ".":"gzoltarcli.jar" com.gzoltar.cli.Main faultLocalizationReport --buildLocation "build/" --granularity "line" --dataFile gzoltar.ser --family "sfl" --formula "ochiai" --outputDirectory . --formatter HTML)`;
     
     /**
      * GZoltarCommander fields
@@ -42,12 +42,15 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     buildCommander(): GZoltarCommand[] {
         // process.platform
         // path.sep
-        //TODO TITLE
-        const listCommand = new GZoltarCommand('Cleanup', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.cleanup', title: ''});
-        const runTestCommand = new GZoltarCommand('Run Test Methods', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.run', title: ''});
-        const reportCommand = new GZoltarCommand('Generate Report', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.report', title: ''});
-        const showviewCommand = new GZoltarCommand('Show View', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.show', title: ''});
-        return [listCommand, runTestCommand, reportCommand, showviewCommand];
+        //TODO command TITLES
+        vscode.workspace.onDidChangeTextDocument((e: vscode.TextDocumentChangeEvent) => {
+            // TODO update commander
+        });
+
+        const runTestCommand = new GZoltarCommand('Run GZoltar', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.run', title: ''});
+        const showViewCommand = new GZoltarCommand('Show Views', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.show', title: ''});
+        const resetCommand = new GZoltarCommand('Reset Config', vscode.TreeItemCollapsibleState.None, {command: 'gzoltar.reset', title: ''});
+        return [runTestCommand, showViewCommand, resetCommand];
     }
 
     getTreeItem(element: GZoltarCommand): vscode.TreeItem | Thenable<vscode.TreeItem> {
@@ -61,43 +64,56 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         return Promise.resolve(element.children);
     }
 
-    async cleanup() {
+    async run() {
+        // TODO verify if any change happened between previous executions of this method
+        // so as to avoid needless repetition
+        await this.cleanup();
+        await this.list();
+        await this.runTests();
+        await this.report();
+        vscode.window.showInformationMessage('Run Completed.');
+    }
+
+    private async cleanup(): Promise<void> {
         await Promise.all([
-            fse.emptyDir(this.buildPath), fse.emptyDir(join(this.configPath, 'sfl')),
-            fse.remove(`${this.configPath}/tests.txt`), fse.remove(join(this.configPath, 'gzoltar.ser'))]);
-        
-        vscode.window.showInformationMessage('Cleanup completed.');
+            fse.emptyDir(this.buildPath), 
+            fse.emptyDir(join(this.configPath, 'sfl')),
+            fse.remove(join(this.configPath, 'tests.txt')), 
+            fse.remove(join(this.configPath, 'gzoltar.ser'))
+        ]);
+    }
+    
+    private async list(): Promise<void> {
+        await fse.remove(join(this.configPath, 'tests.txt'));
+        return exec(this.listFunction(this.configPath, this.fileMaster.getTestFolder(), this.fileMaster.getWorkspace()))
+            .then(() => {})
+            .catch((err: any) => {
+                const e = '';
+            });
     }
 
-    async runTestMethods() {
-        
-        await fse.remove(`${this.configPath}/tests.txt`);
-        const { err0, stdout0, stderr0 } = await exec(this.listFunction(this.configPath, this.fileMaster.getTestFolder(), this.fileMaster.getWorkspace()));
-        if(err0) {
-            return vscode.window.showErrorMessage(err0.message); //TODO error handler
-        }
+    private async runTests(): Promise<void> {
+        await fse.remove(join(this.configPath, 'gzoltar.ser'));
+        await this.fileMaster.copySourcesTo(this.buildPath);
 
-        await fse.remove(`${this.configPath}/gzoltar.ser`);
-        await this.fileMaster.copyTo(this.buildPath);
         const includes = await this.fileMaster.getIncludes();
-        
-        const { err, stdout, stderr } = await exec(this.runFunction(this.configPath, includes));
-        if(err) {
-            return vscode.window.showErrorMessage(err.message);
-        }
-        
-        vscode.window.showInformationMessage('Run completed.');
+        return exec(this.runFunction(this.configPath, includes))
+            .then(() => {})
+            .catch((err: any) => {
+                const e = '';
+            });
     }
 
-    async generateReport() {
-        const { err, stdout, stderr } = await exec(this.reportFunction(this.configPath));
-        if(err) {
-            return vscode.window.showErrorMessage(err.message);
-        }
-        vscode.window.showInformationMessage('Report completed.');
+    private async report(): Promise<void> {
+        return exec(this.reportFunction(this.configPath))
+            .then(() => {})
+            .catch((e: Error) => {
+                const a = '';
+            });
     }
 
-    async showView() {
+    async showViews() {
+        // check for changes on files before calling previous methods
         // depends on previous methods
         const data = await fse.readFile(`${this.configPath}/sfl/html/ochiai/sunburst.html`);
         const html = data.toString();
@@ -121,6 +137,10 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         panel.webview.html = html.replace('<script type="text/javascript" src="gzoltar.js"></script>', ` <script>${gzoltarScr}</script>`);
         //TODO replace d3 script with a fixed one
         //TODO save instance of webview so no duplicates are created
+    }
+
+    async resetConfig() {
+
     }
 }
 

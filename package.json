@@ -58,35 +58,27 @@
 				"title": "GZoltar: Set Test Folder"
 			},
 			{
-				"command": "gzoltar.cleanup",
-				"title": "Cleanup Previous Runs",
-				"icon": {
-					"light": "resources/light/refresh.svg",
-					"dark": "resources/dark/refresh.svg"
-				}
-			},
-			{
 				"command": "gzoltar.run",
-				"title": "Run Test Methods",
+				"title": "Run GZoltar",
 				"icon": {
 					"light": "resources/light/boolean.svg",
 					"dark": "resources/dark/boolean.svg"
 				}
 			},
 			{
-				"command": "gzoltar.report",
-				"title": "Generate Report",
-				"icon": {
-					"light": "resources/light/document.svg",
-					"dark": "resources/dark/document.svg"
-				}
-			},
-			{
 				"command": "gzoltar.show",
-				"title": "Show HTML Views",
+				"title": "Show Views",
 				"icon": {
 					"light": "resources/light/string.svg",
 					"dark": "resources/dark/string.svg"
+				}
+			},
+			{
+				"command": "gzoltar.reset",
+				"title": "Reset Config Folder",
+				"icon": {
+					"light": "resources/light/refresh.svg",
+					"dark": "resources/dark/refresh.svg"
 				}
 			}
 		]
@@ -108,7 +100,7 @@
 		"@typescript-eslint/parser": "^2.18.0",
 		"eslint": "^6.8.0",
 		"glob": "^7.1.6",
-		"mocha": "^7.0.1",
+		"mocha": "^7.1.2",
 		"typescript": "^3.7.5",
 		"vscode-test": "^1.3.0"
 	},

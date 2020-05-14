@@ -2,14 +2,13 @@
 
 export { listFunction, runFunction, reportFunction };
 
-
 function listFunction(destPath: string, buildPath: string, resPath: string): string {
     return new Command()
         .cd(destPath)
         .newCmd()
         .java()
         .javaagent('"gzoltaragent.jar"')
-        .cp(`"${buildPath}":"gzoltarcli.jar" `)
+        .cp(`"${buildPath}"`, '"gzoltarcli.jar"')
         .main(`com.gzoltar.cli.Main listTestMethods ${resPath}`)
         .toString();
 }
@@ -20,7 +19,7 @@ function runFunction(destPath: string, includes: string): string {
         .newCmd()
         .java()
         .javaagent(`gzoltaragent.jar=includes="${includes}"`)
-        .cp(`"build/":"junit-4.13.jar":"hamcrest-core-2.2.jar":"gzoltarcli.jar"`)
+        .cp('"build/"', '"junit-4.13.jar"', '"hamcrest-core-2.2.jar"', '"gzoltarcli.jar"')
         .main(`com.gzoltar.cli.Main runTestMethods --testMethods "tests.txt" --collectCoverage`)
         .toString();
 }
@@ -30,7 +29,7 @@ function reportFunction(destPath: string): string {
         .cd(destPath)
         .newCmd()
         .java()
-        .cp('".":"gzoltarcli.jar"')
+        .cp('"."', '"gzoltarcli.jar"')
         .main('com.gzoltar.cli.Main faultLocalizationReport --buildLocation "build/" --granularity "line" --dataFile gzoltar.ser --family "sfl" --formula "ochiai" --outputDirectory . --formatter HTML')
         .toString();
 }
@@ -38,9 +37,11 @@ function reportFunction(destPath: string): string {
 class Command {
 
     private readonly commands: string[];
+    private readonly cpSep: string;
 
     constructor() {
         this.commands = [];
+        this.cpSep = process.platform === 'win32' ? ';' : ':';
     }
 
     public newCmd(): Command {
@@ -63,8 +64,8 @@ class Command {
         return this;
     }
 
-    public cp(classpath: string): Command {
-        this.commands.push(`-cp ${classpath}`);
+    public cp(...args: string[]): Command {
+        this.commands.push(`-cp ${args.join(this.cpSep)}`);
         return this;
     }
 

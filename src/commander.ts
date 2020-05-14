@@ -19,25 +19,23 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     private readonly fileMaster: FileMaster;
     private readonly configPath: string;
     private readonly buildPath: string;
+    private docChanged: boolean = true;
 
     constructor(fileMaster: FileMaster) {
         this.fileMaster = fileMaster;
         this.configPath = fileMaster.getConfig();
         this.buildPath = join(this.configPath, 'build');
         this.commands = this.buildCommander();
+
+        vscode.workspace.onDidChangeTextDocument((_e: vscode.TextDocumentChangeEvent) => {
+            this.docChanged = true;
+        });
     }
 
     buildCommander(): GZoltarCommand[] {
-        // process.platform
-        // path.sep
-        //TODO command TITLES
-        vscode.workspace.onDidChangeTextDocument((e: vscode.TextDocumentChangeEvent) => {
-            // TODO update commander
-        });
-
-        const runTestCommand = new GZoltarCommand('Run GZoltar', vscode.TreeItemCollapsibleState.None, { command: 'gzoltar.run', title: '' });
-        const showViewCommand = new GZoltarCommand('Show Views', vscode.TreeItemCollapsibleState.None, { command: 'gzoltar.show', title: '' });
-        const resetCommand = new GZoltarCommand('Reset Config', vscode.TreeItemCollapsibleState.None, { command: 'gzoltar.reset', title: '' });
+        const runTestCommand = new GZoltarCommand('Run GZoltar', vscode.TreeItemCollapsibleState.None, { command: 'gzoltar.run', title: 'Run GZoltar' });
+        const showViewCommand = new GZoltarCommand('Show Views', vscode.TreeItemCollapsibleState.None, { command: 'gzoltar.show', title: 'Show Views' });
+        const resetCommand = new GZoltarCommand('Reset Config', vscode.TreeItemCollapsibleState.None, { command: 'gzoltar.reset', title: 'Reset Config' });
         return [runTestCommand, showViewCommand, resetCommand];
     }
 
@@ -53,8 +51,6 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     }
 
     async run() {
-        // TODO verify if any change happened between previous executions of this method
-        // so as to avoid needless repetition
         await this.cleanup();
         await this.list();
         await this.runTests();
@@ -75,7 +71,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         await fse.remove(join(this.configPath, 'tests.txt'));
         return exec(listFunction(this.configPath, this.fileMaster.getTestFolder(), this.fileMaster.getWorkspace()))
             .then(() => { })
-            .catch((err: any) => {
+            .catch((_err: any) => {
                 const e = '';
             });
     }
@@ -87,7 +83,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         const includes = await this.fileMaster.getIncludes();
         return exec(runFunction(this.configPath, includes))
             .then(() => { })
-            .catch((err: any) => {
+            .catch((_err: any) => {
                 const e = '';
             });
     }
@@ -95,7 +91,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     private async report(): Promise<void> {
         return exec(reportFunction(this.configPath))
             .then(() => { })
-            .catch((e: Error) => {
+            .catch((_e: Error) => {
                 const a = '';
             });
     }
@@ -125,10 +121,6 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         panel.webview.html = html.replace('<script type="text/javascript" src="gzoltar.js"></script>', ` <script>${gzoltarScr}</script>`);
         //TODO replace d3 script with a fixed one
         //TODO save instance of webview so no duplicates are created
-    }
-
-    async resetConfig() {
-
     }
 }
 

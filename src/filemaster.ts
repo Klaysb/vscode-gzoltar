@@ -55,6 +55,14 @@ export class FileMaster {
             .join(':');
     }
 
+    async resetConfig(toolspath: string): Promise<void> {
+        const configFolder = this.getConfig();
+        const folders = FileMaster.verifyBuildTool(this.currentWorkspace);
+        await fse.emptyDir(configFolder);
+        await fse.copy(toolspath, configFolder, { overwrite: false });
+        await fse.writeFile(this.configFile, `${folders[0]}\n${folders[1]}`);
+    }
+
     async copySourcesTo(dest: string): Promise<void> {
         const options = { overwrite: false };
         await fse.copy(join(this.currentWorkspace, this.sourceFolder), dest, options);

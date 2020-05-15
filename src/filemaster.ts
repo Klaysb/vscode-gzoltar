@@ -23,39 +23,39 @@ export class FileMaster {
         this.testFolder = testFolder;
     }
 
-    getWorkspace(): string {
+    public getWorkspace(): string {
         return this.currentWorkspace;
     }
 
-    getConfig(): string {
+    public getConfig(): string {
         return join(this.currentWorkspace, FileMaster.CONFIG_FOLDER);
     }
 
-    getSourceFolder(): string {
+    public getSourceFolder(): string {
         return join(this.currentWorkspace, this.sourceFolder);
     }
 
-    async setSourceFolder(newSrcFolder: string): Promise<void> {
+    public async setSourceFolder(newSrcFolder: string): Promise<void> {
         this.sourceFolder = newSrcFolder.replace(this.currentWorkspace, '');
         return fse.writeFile(this.configFile, `${this.sourceFolder}\n${this.testFolder}`);
     }
 
-    getTestFolder(): string {
+    public getTestFolder(): string {
         return join(this.currentWorkspace, this.testFolder);
     }
 
-    async setTestFolder(newTestFolder: string): Promise<void> {
+    public async setTestFolder(newTestFolder: string): Promise<void> {
         this.testFolder = newTestFolder.replace(this.currentWorkspace, '');
         return fse.writeFile(this.configFile, `${this.sourceFolder}\n${this.testFolder}`);
     }
 
-    async getIncludes(): Promise<string> {
+    public async getIncludes(): Promise<string> {
         return (await this.getFiles(join(this.currentWorkspace, this.sourceFolder), ''))
             .map(f => f.replace(/.class/g, ''))
             .join(':');
     }
 
-    async resetConfig(toolsPath: string): Promise<void> {
+    public async resetConfig(toolsPath: string): Promise<void> {
         const configFolder = this.getConfig();
         const folders = FileMaster.verifyBuildTool(this.currentWorkspace);
         await fse.emptyDir(configFolder);
@@ -63,7 +63,7 @@ export class FileMaster {
         await fse.writeFile(this.configFile, `${folders[0]}\n${folders[1]}`);
     }
 
-    async copySourcesTo(dest: string): Promise<void> {
+    public async copySourcesTo(dest: string): Promise<void> {
         const options = { overwrite: false };
         await fse.copy(join(this.currentWorkspace, this.sourceFolder), dest, options);
         await fse.copy(join(this.currentWorkspace, this.testFolder), dest, options);
@@ -85,7 +85,7 @@ export class FileMaster {
         return filelist;
     }
 
-    static async createFileMaster(workspace: string, toolsPath: string): Promise<FileMaster> {
+    public static async createFileMaster(workspace: string, toolsPath: string): Promise<FileMaster> {
         const configFolder = join(workspace, this.CONFIG_FOLDER);
         const configFile = join(configFolder, this.CONFIG_FILE);
         await fse.ensureDir(configFolder);

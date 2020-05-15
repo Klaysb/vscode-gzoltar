@@ -70,7 +70,6 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     }
 
     private async list(): Promise<void> {
-        await fse.remove(join(this.configPath, 'tests.txt'));
         return exec(listFunction(this.configPath, this.fileMaster.getTestFolder(), this.fileMaster.getWorkspace()))
             .then(() => { })
             .catch((_err: any) => {
@@ -79,10 +78,9 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     }
 
     private async runTests(): Promise<void> {
-        await fse.remove(join(this.configPath, 'gzoltar.ser'));
         await this.fileMaster.copySourcesTo(this.buildPath);
-
         const includes = await this.fileMaster.getIncludes();
+        
         return exec(runFunction(this.configPath, includes))
             .then(() => { })
             .catch((_err: any) => {

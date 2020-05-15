@@ -63,7 +63,8 @@ export class ReportPanel {
 
         const views = await Promise.all(
             ['sunburst.html', 'bubblehierarchy.html', 'verticalpartition.html']
-                .map(s => new ViewFile(join(viewPath, s)).setScript(scriptUri.toString())));
+                .map(s => new ViewFile(join(viewPath, s))
+                .setScript(scriptUri.toString())));
 
         const viewUris = views
             .map(v => vscode.Uri.file(v))
@@ -80,29 +81,29 @@ export class ReportPanel {
                         <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
                         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
                     </head>
-                    <body>
+                    <body style="background: rgba(0,0,0,0);">
                         <ul class="nav nav-tabs" id="myTab" role="tablist">
                             <li class="nav-item">
-                                <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Sunburst</a>
+                                <a class="nav-link active" id="sunburst-tab" data-toggle="tab" href="#sunburst" role="tab" aria-controls="sunburst" aria-selected="true">Sunburst</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Bubble Hierarchy</a>
+                                <a class="nav-link" id="bubble-tab" data-toggle="tab" href="#bubble" role="tab" aria-controls="bubble" aria-selected="false">Bubble Hierarchy</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">Vertical Partition</a>
+                                <a class="nav-link" id="vertical-tab" data-toggle="tab" href="#vertical" role="tab" aria-controls="vertical" aria-selected="false">Vertical Partition</a>
                             </li>
                         </ul>
                         <div class="tab-content" id="myTabContent">
-                            <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
-                                <iframe src="${views[0]}" style="overflow: hidden;border:none;" scrolling='no' height='300' width='600'></iframe>
+                            <div class="tab-pane fade show active" id="sunburst" role="tabpanel" aria-labelledby="sunburst-tab">
+                                <iframe src="${views[0]}" style="overflow: hidden;border:none;" scrolling='no' height='100%' width='100%' allowfullscreen></iframe>
                             </div>
                 
-                            <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-                                <iframe src="${views[1]}" style="overflow: hidden;border:none;" scrolling='no' height='300' width='600'></iframe>
+                            <div class="tab-pane fade" id="bubble" role="tabpanel" aria-labelledby="bubble-tab">
+                                <iframe src="${views[1]}" style="overflow: hidden;border:none;" scrolling='no' height='100%' width='100%' allowfullscreen></iframe>
                             </div>
                 
-                            <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
-                                <iframe src="${views[2]}" style="overflow: hidden;border:none;" scrolling='no' height='300' width='600'></iframe>
+                            <div class="tab-pane fade" id="vertical" role="tabpanel" aria-labelledby="vertical-tab">
+                                <iframe src="${views[2]}" style="overflow: hidden;border:none;" scrolling='no' height='100%' width='100%' allowfullscreen></iframe>
                             </div>
                         </div>
                     </body>

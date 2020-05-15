@@ -55,11 +55,11 @@ export class FileMaster {
             .join(':');
     }
 
-    async resetConfig(toolspath: string): Promise<void> {
+    async resetConfig(toolsPath: string): Promise<void> {
         const configFolder = this.getConfig();
         const folders = FileMaster.verifyBuildTool(this.currentWorkspace);
         await fse.emptyDir(configFolder);
-        await fse.copy(toolspath, configFolder, { overwrite: false });
+        await fse.copy(toolsPath, configFolder, { overwrite: false });
         await fse.writeFile(this.configFile, `${folders[0]}\n${folders[1]}`);
     }
 
@@ -85,7 +85,7 @@ export class FileMaster {
         return filelist;
     }
 
-    static async createFileMaster(workspace: string, toolspath: string): Promise<FileMaster> {
+    static async createFileMaster(workspace: string, toolsPath: string): Promise<FileMaster> {
         const configFolder = join(workspace, this.CONFIG_FOLDER);
         const configFile = join(configFolder, this.CONFIG_FILE);
         await fse.ensureDir(configFolder);
@@ -97,7 +97,7 @@ export class FileMaster {
         }
 
         const folders = this.verifyBuildTool(workspace);
-        await fse.copy(toolspath, configFolder, { overwrite: false });
+        await fse.copy(toolsPath, configFolder, { overwrite: false });
         await fse.writeFile(configFile, `${folders[0]}\n${folders[1]}`);
         return new FileMaster(workspace, folders[0], folders[1]);
     }

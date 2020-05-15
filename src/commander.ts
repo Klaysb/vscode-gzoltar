@@ -6,6 +6,7 @@ import * as fse from 'fs-extra';
 import util = require('util');
 import { FileMaster } from './filemaster';
 import { listFunction, runFunction, reportFunction } from './cmdBuilder';
+import { ReportPanel } from './reportPanel';
 const exec = util.promisify(require('child_process').exec);
 
 
@@ -27,7 +28,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         this.buildPath = join(this.configPath, 'build');
         this.commands = this.buildCommander();
 
-        vscode.workspace.onDidChangeTextDocument((_e: vscode.TextDocumentChangeEvent) => {
+        vscode.workspace.onDidSaveTextDocument((e: vscode.TextDocument) => {
             this.docChanged = true;
         });
     }
@@ -55,6 +56,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         await this.list();
         await this.runTests();
         await this.report();
+        this.docChanged = false;
         vscode.window.showInformationMessage('Run Completed.');
     }
 
@@ -96,31 +98,12 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
             });
     }
 
-    async showViews() {
-        // check for changes on files before calling previous methods
-        // depends on previous methods
-        const data = await fse.readFile(`${this.configPath}/sfl/html/ochiai/sunburst.html`);
-        const html = data.toString();
+    async showViews(toolspath: string) {
+        if (this.docChanged) {
+            await this.run();
+        }
 
-        const scriptPathOnDisk = vscode.Uri.file(
-            join(this.configPath, "sfl", "html", "ochiai", "gzoltar.js")
-        );
-
-        const gzoltarScr = (await fse.readFile(join(this.configPath, "sfl", "html", "ochiai", "gzoltar.js"))).toString();
-
-        const panel = vscode.window.createWebviewPanel(
-            'report',
-            'Report',
-            vscode.ViewColumn.Beside,
-            {
-                enableScripts: true,
-                localResourceRoots: [vscode.Uri.file(this.configPath)]
-            }
-        );
-        const scriptUri = panel.webview.asWebviewUri(scriptPathOnDisk);
-        panel.webview.html = html.replace('<script type="text/javascript" src="gzoltar.js"></script>', ` <script>${gzoltarScr}</script>`);
-        //TODO replace d3 script with a fixed one
-        //TODO save instance of webview so no duplicates are created
+        ReportPanel.createOrShow(toolspath, this.configPath);
     }
 }
 

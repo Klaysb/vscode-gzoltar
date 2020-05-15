@@ -71,29 +71,20 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
 
     private async list(): Promise<void> {
         return exec(listFunction(this.configPath, this.fileMaster.getTestFolder(), this.fileMaster.getWorkspace()))
-            .then(() => { })
-            .catch((_err: any) => {
-                const e = '';
-            });
+            .catch((_err: any) => { });
     }
 
     private async runTests(): Promise<void> {
         await this.fileMaster.copySourcesTo(this.buildPath);
         const includes = await this.fileMaster.getIncludes();
-        
+
         return exec(runFunction(this.configPath, includes))
-            .then(() => { })
-            .catch((_err: any) => {
-                const e = '';
-            });
+            .catch((_err: any) => { });
     }
 
     private async report(): Promise<void> {
         return exec(reportFunction(this.configPath))
-            .then(() => { })
-            .catch((_e: Error) => {
-                const a = '';
-            });
+            .catch((_e: Error) => { });
     }
 
     async showViews(toolspath: string) {

@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as fse from 'fs-extra';
-import { join, format } from 'path';
+import { join } from 'path';
 
 export class ReportPanel {
 
@@ -103,9 +103,9 @@ export class ReportPanel {
                             let active = document.getElementById('sunburst');
                 
                             function change(id) {
-                                active.setAttribute('style', 'display: none;');
+                                active.style.display = 'none';
                                 active = document.getElementById(id);
-                                active.setAttribute('style', 'display: inline;')
+                                active.style.display = 'inline';
                             }
                         </script>
                     </body>

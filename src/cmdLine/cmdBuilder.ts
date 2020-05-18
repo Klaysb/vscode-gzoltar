@@ -1,5 +1,7 @@
 'use strict';
 
+import { Command } from "./command";
+
 export { listFunction, runFunction, reportFunction };
 
 function listFunction(destPath: string, buildPath: string, resPath: string): string {
@@ -32,49 +34,4 @@ function reportFunction(destPath: string): string {
         .cp('"."', '"gzoltarcli.jar"')
         .main('com.gzoltar.cli.Main faultLocalizationReport --buildLocation "build/" --granularity "line" --dataFile gzoltar.ser --family "sfl" --formula "ochiai" --outputDirectory . --formatter HTML')
         .toString();
-}
-
-class Command {
-
-    private readonly commands: string[];
-    private readonly cpSep: string;
-
-    constructor() {
-        this.commands = [];
-        this.cpSep = process.platform === 'win32' ? ';' : ':';
-    }
-
-    public newCmd(): Command {
-        this.commands.push('&&');
-        return this;
-    }
-
-    public cd(dest: string): Command {
-        this.commands.push(`cd ${dest}`);
-        return this;
-    }
-
-    public java(): Command {
-        this.commands.push('java');
-        return this;
-    }
-
-    public javaagent(agentJar: string): Command {
-        this.commands.push(`-javaagent:${agentJar}`);
-        return this;
-    }
-
-    public cp(...args: string[]): Command {
-        this.commands.push(`-cp ${args.join(this.cpSep)}`);
-        return this;
-    }
-
-    public main(mainArgs: string): Command {
-        this.commands.push(mainArgs);
-        return this;
-    }
-
-    public toString(): string {
-        return `(${this.commands.join(' ')})`;
-    }
 }

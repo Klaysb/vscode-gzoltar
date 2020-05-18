@@ -1,20 +1,16 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import { join } from 'path';
 import * as fse from 'fs-extra';
-import util = require('util');
+import { join } from 'path';
 import { FileMaster } from './filemaster';
-import { listFunction, runFunction, reportFunction } from './cmdBuilder';
+import { listFunction, runFunction, reportFunction } from './cmdLine/cmdBuilder';
 import { ReportPanel } from './reportPanel';
+import util = require('util');
 const exec = util.promisify(require('child_process').exec);
 
 
 export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand> {
-
-    /**
-     * GZoltarCommander fields
-     */
 
     private readonly commands: GZoltarCommand[];
     private readonly fileMaster: FileMaster;

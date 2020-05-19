@@ -78,7 +78,7 @@ export class ReportPanel {
                     <head>
                         <title>GZoltar</title>
                     </head>
-    
+
                     <body>
                         <div>
                             <ul>
@@ -117,8 +117,8 @@ class ViewFile {
 
     private readonly fileName: string;
 
-    constructor(fn: string) {
-        this.fileName = fn;
+    constructor(fileName: string) {
+        this.fileName = fileName;
     }
 
     public async setScript(script: string): Promise<string> {

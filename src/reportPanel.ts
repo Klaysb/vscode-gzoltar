@@ -41,6 +41,10 @@ export class ReportPanel {
             }
         );
 
+        panel.webview.onDidReceiveMessage((message) => {
+
+        });
+
         ReportPanel.currentPanel = new ReportPanel(panel, configPath);
     }
 
@@ -64,52 +68,25 @@ export class ReportPanel {
         const views = await Promise.all(
             ['sunburst.html', 'bubblehierarchy.html', 'verticalpartition.html']
                 .map(s => new ViewFile(join(viewPath, s))
-                .setScript(scriptUri.toString())));
+                .setHtml(scriptUri.toString(), this.webviewHtml())));
 
-        const viewUris = views
-            .map(v => vscode.Uri.file(v))
-            .map(v => this.panel.webview.asWebviewUri(v).toString());
+        this.panel.webview.onDidReceiveMessage((message) => {
+            this.panel.webview.html = views[message.index];
+        });
 
-        this.panel.webview.html = this.formatMain(viewUris);
+        this.panel.webview.html = views[0];
     }
 
-    private formatMain(views: string[]): string {
-        return `<html>
-                    <head>
-                        <title>GZoltar</title>
-                    </head>
-
-                    <body>
-                        <div>
-                            <ul>
-                                <button onclick="change('sunburst')">Sunburst</button>
-                                <button onclick="change('bubble')">Bubble Hierarchy</button>
-                                <button onclick="change('vertical')">Vertical Partition</button>
-                            </ul>
-                        </div>
-                        <div id="sunburst">
-                            <iframe src="${views[0]}" id="sunburstF" style="overflow: hidden;border:none;" scrolling='no' height='100%'
-                                width='100%' allowfullscreen></iframe>
-                        </div>
-                        <div id="bubble" style="display: none;">
-                            <iframe src="${views[1]}" id="bubbleF" style="overflow: hidden;border:none;" scrolling='no'
-                                    height='100%' width='100%' allowfullscreen></iframe>
-                        </div>
-                        <div id="vertical" style="display: none;">
-                            <iframe src="${views[2]}" id="verticalF" style="overflow: hidden;border:none;" scrolling='no'
-                                height='100%' width='100%' allowfullscreen></iframe>
-                        </div>
-                        <script>
-                            let active = document.getElementById('sunburst');
-                
-                            function change(id) {
-                                active.style.display = 'none';
-                                active = document.getElementById(id);
-                                active.style.display = 'inline';
-                            }
-                        </script>
-                    </body>
-                </html>`;
+    private webviewHtml(): string {
+        return `<button onclick="change(0)">Sunburst</button>
+                <button onclick="change(1)">Bubble Hierarchy</button>
+                <button onclick="change(2)">Vertical Partition</button>
+                <script>
+                    const vscode = acquireVsCodeApi();
+                    function change(num) {
+                        vscode.postMessage({index: num});
+                    }
+                </script>`;
     }
 }
 
@@ -121,10 +98,11 @@ class ViewFile {
         this.fileName = fileName;
     }
 
-    public async setScript(script: string): Promise<string> {
+    public async setHtml(script: string, html: string): Promise<string> {
         const file = (await fse.readFile(this.fileName)).toString();
-        const newFile = file.replace('"gzoltar.js"', `"${script}"`);
-        await fse.writeFile(this.fileName, newFile);
-        return this.fileName;
+        const newHtml = file.replace(
+            '<script type="text/javascript" src="gzoltar.js"></script>', 
+            `<script type="text/javascript" src="${script}"></script>\n${html}`);
+        return newHtml;
     }
 }

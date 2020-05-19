@@ -27,6 +27,14 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         vscode.workspace.onDidSaveTextDocument((e: vscode.TextDocument) => {
             this.docChanged = true;
         });
+
+        vscode.workspace.onDidCreateFiles((e: vscode.FileCreateEvent) => {
+            this.docChanged = true;
+        });
+
+        vscode.workspace.onDidDeleteFiles((e: vscode.FileDeleteEvent) => {
+            this.docChanged = true;
+        });
     }
 
     buildCommander(): GZoltarCommand[] {
@@ -45,6 +53,12 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
             return Promise.resolve(this.commands);
         }
         return Promise.resolve(element.children);
+    }
+
+    async reset(toolspath: string) {
+        this.docChanged = true;
+        await this.fileMaster.resetConfig(toolspath);
+        vscode.window.showInformationMessage('Reset Completed.');
     }
 
     async run() {

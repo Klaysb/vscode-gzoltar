@@ -41,10 +41,6 @@ export class ReportPanel {
             }
         );
 
-        panel.webview.onDidReceiveMessage((message) => {
-
-        });
-
         ReportPanel.currentPanel = new ReportPanel(panel, configPath);
     }
 

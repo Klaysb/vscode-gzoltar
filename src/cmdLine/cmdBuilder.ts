@@ -32,6 +32,6 @@ function reportFunction(destPath: string): string {
         .newCmd()
         .java()
         .cp('"."', '"gzoltarcli.jar"')
-        .main('com.gzoltar.cli.Main faultLocalizationReport --buildLocation "build/" --granularity "line" --dataFile gzoltar.ser --family "sfl" --formula "ochiai" --outputDirectory . --formatter HTML')
+        .main('com.gzoltar.cli.Main faultLocalizationReport --buildLocation "build/" --granularity "line" --dataFile gzoltar.ser --family "sfl" --formula "ochiai" --outputDirectory . --formatter HTML,TXT')
         .toString();
 }

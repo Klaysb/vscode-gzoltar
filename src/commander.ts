@@ -2,11 +2,13 @@
 
 import * as vscode from 'vscode';
 import * as fse from 'fs-extra';
-import { join } from 'path';
+import { join, sep } from 'path';
 import { FileMaster } from './filemaster';
 import { listFunction, runFunction, reportFunction } from './cmdLine/cmdBuilder';
 import { ReportPanel } from './reportPanel';
 import util = require('util');
+import { EOL } from 'os';
+import { Decorator } from './decorator';
 const exec = util.promisify(require('child_process').exec);
 
 
@@ -66,6 +68,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         await this.list();
         await this.runTests();
         await this.report();
+        await this.rankings();
         this.docChanged = false;
         vscode.window.showInformationMessage('Run Completed.');
     }
@@ -95,6 +98,39 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     private async report(): Promise<void> {
         return exec(reportFunction(this.configPath))
             .catch((_e: Error) => { });
+    }
+
+    private async rankings(): Promise<void> {
+        const ranking = (await fse.readFile(join(this.configPath, 'sfl', 'txt', 'ochiai.ranking.csv'))).toString();
+        Decorator.createDecorator(ranking);
+        // const regex = /[\w()<>._-]+/g;
+        // const test = 'org.gzoltar.examples$StaticField#StaticField():22;0.0';
+        // const res = test.match(regex);
+        // if (res === null) {
+        //     return;
+        // }
+        // const fn = this.fileMaster.getWorkspace() + '/src/main/java/' + join(res[0].replace(/\./g, sep), res[1]) + '.java';
+        // const document = await vscode.workspace.openTextDocument(fn);
+        // const lnum = +res[3];
+        // const line = document.lineAt(lnum - 1);
+
+        // const decorationType = vscode.window.createTextEditorDecorationType({
+        //     backgroundColor: 'green',
+        //     border: '2px solid white',
+        //   });
+        
+        // const range = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, vscode.EndOfLine.LF));
+        // const eds = vscode.window.visibleTextEditors;
+        // eds.forEach(ed => {
+        //     ed.setDecorations(decorationType, [{ range }]);
+        // });
+        // vscode.window.onDidChangeActiveTextEditor((te) => {
+        //     if (te !== undefined) {
+        //         te.setDecorations(decorationType, [{ range }]);
+        //         const dn = te.document.fileName;
+        //         const a = '';
+        //     }
+        // });
     }
 
     async showViews(toolspath: string) {

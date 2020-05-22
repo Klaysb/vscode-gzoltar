@@ -2,15 +2,12 @@
 
 import * as vscode from 'vscode';
 import * as fse from 'fs-extra';
-import { join, sep } from 'path';
+import { join } from 'path';
 import { FileMaster } from './filemaster';
 import { listFunction, runFunction, reportFunction } from './cmdLine/cmdBuilder';
 import { ReportPanel } from './reportPanel';
-import util = require('util');
-import { EOL } from 'os';
 import { Decorator } from './decorator';
-const exec = util.promisify(require('child_process').exec);
-
+const exec = require('util').promisify(require('child_process').exec);
 
 export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand> {
 
@@ -18,12 +15,14 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     private readonly fileMaster: FileMaster;
     private readonly configPath: string;
     private readonly buildPath: string;
+    private readonly extensionPath: string;
     private docChanged: boolean = true;
 
-    constructor(fileMaster: FileMaster) {
+    constructor(fileMaster: FileMaster, extensionPath: string) {
         this.fileMaster = fileMaster;
         this.configPath = fileMaster.getConfig();
         this.buildPath = join(this.configPath, 'build');
+        this.extensionPath = extensionPath;
         this.commands = this.buildCommander();
 
         vscode.workspace.onDidSaveTextDocument((e: vscode.TextDocument) => {
@@ -90,7 +89,6 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     private async runTests(): Promise<void> {
         await this.fileMaster.copySourcesTo(this.buildPath);
         const includes = await this.fileMaster.getIncludes();
-
         return exec(runFunction(this.configPath, includes))
             .catch((_err: any) => { });
     }
@@ -102,14 +100,14 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
 
     private async rankings(): Promise<void> {
         const ranking = (await fse.readFile(join(this.configPath, 'sfl', 'txt', 'ochiai.ranking.csv'))).toString();
-        Decorator.createDecorator(ranking);
+        Decorator.createDecorator(ranking, this.extensionPath);
     }
 
     async showViews(toolspath: string) {
         if (this.docChanged) {
             await this.run();
         }
-
+        
         ReportPanel.createOrShow(toolspath, this.configPath);
     }
 }

@@ -6,24 +6,30 @@ import { join, sep } from 'path';
 export class Decorator {
 
     private static currentDecorator: Decorator | undefined;
-    private readonly decorationType = vscode.window.createTextEditorDecorationType({
-        backgroundColor: 'green',
-        border: '2px solid white',
-    });
 
-    private readonly listener: vscode.Disposable;
     private readonly rankings: RankingGroup;
+    private readonly extensionPath: string;
+    private readonly listener: vscode.Disposable;
+    private readonly decorationType: vscode.TextEditorDecorationType;
 
-    constructor(rankings: RankingGroup) {
+    constructor(rankings: RankingGroup, extensionPath: string) {
         this.rankings = rankings;
+        this.extensionPath = extensionPath;
+
         this.listener = vscode.window.onDidChangeActiveTextEditor((editor) => {
             if (editor) {
                 this.setDecorations(editor);
             }
         });
+
+        this.decorationType = vscode.window.createTextEditorDecorationType({
+            backgroundColor: new vscode.ThemeColor('contrastBorder'),
+            gutterIconPath: join(this.extensionPath, 'media', 'icons', 'red.svg'),
+            gutterIconSize: '100%'
+        });
     }
 
-    public static createDecorator(rankingFile: string): void {
+    public static createDecorator(rankingFile: string, extensionPath: string): void {
         if (Decorator.currentDecorator) {
             Decorator.currentDecorator.dispose();
         }
@@ -39,13 +45,12 @@ export class Decorator {
                 return prev;
             }, {});
 
-        Decorator.currentDecorator = new Decorator(rankings);
+        Decorator.currentDecorator = new Decorator(rankings, extensionPath);
     }
 
     private setDecorations(editor: vscode.TextEditor): void {
         const document = editor.document;
         for (const key in this.rankings) {
-            
             if (document.fileName.includes(key)) {
                 const decorationOptions = this.rankings[key]
                     .map((r: Ranking) => ({ 'range': document.lineAt(r.getLine()).range }));
@@ -78,9 +83,11 @@ class Ranking {
         if (split === null) {
             throw new Error('Inaccessible point.');
         }
-        this.name = join(split[0].replace(/\./g, sep), split[1]);
-        this.line = +split[3] - 1;
-        this.suspiciousness = +split[4];
+        this.name = split.length === 5
+            ? join(split[0].replace(/\./g, sep), split[1])
+            : split[0];
+        this.line = +split[split.length - 2] - 1;
+        this.suspiciousness = +split[split.length - 1];
     }
 
     public getName(): string {

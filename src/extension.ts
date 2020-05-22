@@ -14,7 +14,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	const workspace = vscode.workspace.workspaceFolders[0].uri.fsPath;
 	const toolsPath = join(context.extensionPath, 'tools');
 	const filemaster = await FileMaster.createFileMaster(workspace, toolsPath);
-	const commander = new GZoltarCommander(filemaster);
+	const commander = new GZoltarCommander(filemaster, context.extensionPath);
 
 	vscode.window.registerTreeDataProvider('gzoltar', commander);
 

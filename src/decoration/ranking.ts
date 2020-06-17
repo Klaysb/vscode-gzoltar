@@ -16,8 +16,7 @@ class RankingGroup {
 
 class RankingLine {
 
-    public static readonly REGEX = /[\w()<>._-]+/g;
-
+    public static readonly REGEX = /(.+)?\$(.+)\#(.+)\:(.+)\;(.+)/;
 
     private readonly name: string;
     private readonly line: number;
@@ -32,9 +31,9 @@ class RankingLine {
 
         this.line = +split[split.length - 2] - 1;
         this.suspiciousness = +split[split.length - 1];
-        this.name = split.length === 5
-            ? join(split[0].replace(/\./g, sep), split[1])
-            : split[0];
+        this.name = split.length === 6
+            ? join(split[1].replace(/\./g, sep), split[2])
+            : split[1];
     }
 
 

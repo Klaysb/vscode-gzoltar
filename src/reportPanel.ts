@@ -2,7 +2,7 @@
 
 import * as vscode from 'vscode';
 import * as fse from 'fs-extra';
-import { join } from 'path';
+import { join, sep } from 'path';
 
 export class ReportPanel {
 
@@ -18,6 +18,53 @@ export class ReportPanel {
         this.configPath = configPath;
         this.update();
         this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
+    }
+
+    private async update(): Promise<void> {
+        const viewPath = join(this.configPath, 'sfl', 'html', 'ochiai');
+        const scriptPathOnDisk = vscode.Uri.file(join(viewPath, "gzoltar.js"));
+        const scriptUri = this.panel.webview.asWebviewUri(scriptPathOnDisk);
+
+        const views = await Promise.all(
+            ['sunburst.html', 'bubblehierarchy.html', 'verticalpartition.html']
+                .map(s => this.setScript(join(viewPath, s), scriptUri.toString())));
+
+        this.panel.webview.onDidReceiveMessage((message) => {
+            switch (message.command) {
+                case 'switch':
+                    this.panel.webview.html = views[message.index];
+                    return;
+                case 'open':
+                    const reg = /(.+)\$(.+)\#(.+)\:(.+)/;
+                    const split = String(message.label).split(reg);
+                    const path = join(split[1].replace(/\./g, sep), split[2]);
+                    vscode.workspace.openTextDocument(path);
+                    return;
+            }
+
+        });
+
+        this.panel.webview.html = views[0];
+    }
+
+    private async setScript(filename: string, script: string): Promise<string> {
+        const file = (await fse.readFile(filename)).toString();
+        const newHtml = file.replace(
+            '<script type="text/javascript" src="gzoltar.js"></script>',
+            `<script type="text/javascript" src="${script}"></script>`);
+        return newHtml;
+    }
+
+    private dispose() {
+        ReportPanel.currentPanel = undefined;
+        this.panel.dispose();
+
+        while (this.disposables.length) {
+            const x = this.disposables.pop();
+            if (x) {
+                x.dispose();
+            }
+        }
     }
 
     public static createOrShow(toolsPath: string, configPath: string) {
@@ -42,63 +89,5 @@ export class ReportPanel {
         );
 
         ReportPanel.currentPanel = new ReportPanel(panel, configPath);
-    }
-
-    private dispose() {
-        ReportPanel.currentPanel = undefined;
-        this.panel.dispose();
-
-        while (this.disposables.length) {
-            const x = this.disposables.pop();
-            if (x) {
-                x.dispose();
-            }
-        }
-    }
-
-    private async update(): Promise<void> {
-        const viewPath = join(this.configPath, 'sfl', 'html', 'ochiai');
-        const scriptPathOnDisk = vscode.Uri.file(join(viewPath, "gzoltar.js"));
-        const scriptUri = this.panel.webview.asWebviewUri(scriptPathOnDisk);
-
-        const views = await Promise.all(
-            ['sunburst.html', 'bubblehierarchy.html', 'verticalpartition.html']
-                .map(s => new ViewFile(join(viewPath, s))
-                .setHtml(scriptUri.toString(), this.webviewHtml())));
-
-        this.panel.webview.onDidReceiveMessage((message) => {
-            this.panel.webview.html = views[message.index];
-        });
-
-        this.panel.webview.html = views[0];
-    }
-
-    private webviewHtml(): string {
-        return `<button onclick="change(0)">Sunburst</button>
-                <button onclick="change(1)">Bubble Hierarchy</button>
-                <button onclick="change(2)">Vertical Partition</button>
-                <script>
-                    const vscode = acquireVsCodeApi();
-                    function change(num) {
-                        vscode.postMessage({index: num});
-                    }
-                </script>`;
-    }
-}
-
-class ViewFile {
-
-    private readonly fileName: string;
-
-    constructor(fileName: string) {
-        this.fileName = fileName;
-    }
-
-    public async setHtml(script: string, html: string): Promise<string> {
-        const file = (await fse.readFile(this.fileName)).toString();
-        const newHtml = file.replace(
-            '<script type="text/javascript" src="gzoltar.js"></script>', 
-            `<script type="text/javascript" src="${script}"></script>\n${html}`);
-        return newHtml;
     }
 }

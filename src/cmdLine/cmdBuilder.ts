@@ -4,14 +4,14 @@ import { Command } from "./command";
 
 export { listFunction, runFunction, reportFunction };
 
-function listFunction(destPath: string, buildPath: string, resPath: string): string {
+function listFunction(destPath: string, buildPath: string): string {
     return new Command()
         .cd(destPath)
         .newCmd()
         .java()
         .javaagent('"gzoltaragent.jar"')
-        .cp(`"${buildPath}"`, '"gzoltarcli.jar"')
-        .main(`com.gzoltar.cli.Main listTestMethods ${resPath}`)
+        .cp(`"${buildPath}"`, '"hamcrest-core-2.2.jar"', '"gzoltarcli.jar"')
+        .main(`com.gzoltar.cli.Main listTestMethods ${buildPath}`)
         .toString();
 }
 

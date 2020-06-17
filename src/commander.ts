@@ -6,7 +6,7 @@ import { join } from 'path';
 import { FileMaster } from './filemaster';
 import { listFunction, runFunction, reportFunction } from './cmdLine/cmdBuilder';
 import { ReportPanel } from './reportPanel';
-import { Decorator } from './decorator';
+import { Decorator } from './decoration/decorator';
 const exec = require('util').promisify(require('child_process').exec);
 
 export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand> {
@@ -82,12 +82,12 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     }
 
     private async list(): Promise<void> {
-        return exec(listFunction(this.configPath, this.fileMaster.getTestFolder(), this.fileMaster.getWorkspace()))
+        await this.fileMaster.copySourcesTo(this.buildPath);
+        return exec(listFunction(this.configPath, this.buildPath))
             .catch((_err: any) => { });
     }
 
     private async runTests(): Promise<void> {
-        await this.fileMaster.copySourcesTo(this.buildPath);
         const includes = await this.fileMaster.getIncludes();
         return exec(runFunction(this.configPath, includes))
             .catch((_err: any) => { });
@@ -95,12 +95,14 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
 
     private async report(): Promise<void> {
         return exec(reportFunction(this.configPath))
-            .catch((_e: Error) => { });
+            .catch((_e: Error) => { 
+                const a = '';
+            });
     }
 
     private async rankings(): Promise<void> {
         const ranking = (await fse.readFile(join(this.configPath, 'sfl', 'txt', 'ochiai.ranking.csv'))).toString();
-        Decorator.createDecorator(ranking, this.extensionPath);
+        const decorator = Decorator.createDecorator(ranking, this.extensionPath);
     }
 
     async showViews(toolspath: string) {

@@ -66,14 +66,6 @@
 				}
 			},
 			{
-				"command": "gzoltar.show",
-				"title": "Show Views",
-				"icon": {
-					"light": "resources/light/string.svg",
-					"dark": "resources/dark/string.svg"
-				}
-			},
-			{
 				"command": "gzoltar.reset",
 				"title": "Reset Config Folder",
 				"icon": {

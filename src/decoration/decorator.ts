@@ -55,7 +55,7 @@ export class Decorator {
         }
     }
 
-    private dispose(): void {
+    public dispose(): void {
         this.listener.dispose();
         Decorator.currentDecorator = undefined;
     }

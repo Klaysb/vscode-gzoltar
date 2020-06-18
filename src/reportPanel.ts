@@ -11,10 +11,12 @@ export class ReportPanel {
 
     private readonly panel: vscode.WebviewPanel;
     private readonly configPath: string;
+    private readonly sourcePath: string;
     private disposables: vscode.Disposable[] = [];
 
-    private constructor(panel: vscode.WebviewPanel, configPath: string) {
+    private constructor(panel: vscode.WebviewPanel, sourcePath: string, configPath: string) {
         this.panel = panel;
+        this.sourcePath = sourcePath;
         this.configPath = configPath;
         this.update();
         this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
@@ -37,8 +39,9 @@ export class ReportPanel {
                 case 'open':
                     const reg = /(.+)\$(.+)\#(.+)\:(.+)/;
                     const split = String(message.label).split(reg);
-                    const path = join(split[1].replace(/\./g, sep), split[2]);
-                    vscode.workspace.openTextDocument(path);
+                    const filename = join(split[1].replace(/\./g, sep), split[2]);
+                    const file = join(this.sourcePath, filename) + '.java';
+                    vscode.workspace.openTextDocument(filename);
                     return;
             }
 
@@ -55,7 +58,7 @@ export class ReportPanel {
         return newHtml;
     }
 
-    private dispose() {
+    public dispose() {
         ReportPanel.currentPanel = undefined;
         this.panel.dispose();
 
@@ -67,7 +70,7 @@ export class ReportPanel {
         }
     }
 
-    public static createOrShow(toolsPath: string, configPath: string) {
+    public static createOrShow(sourcePath: string, configPath: string) {
         const column = vscode.ViewColumn.Beside;
 
         if (ReportPanel.currentPanel) {
@@ -82,12 +85,11 @@ export class ReportPanel {
             {
                 enableScripts: true,
                 localResourceRoots: [
-                    vscode.Uri.file(join(toolsPath, 'view')),
                     vscode.Uri.file(join(configPath, 'sfl'))
                 ]
             }
         );
 
-        ReportPanel.currentPanel = new ReportPanel(panel, configPath);
+        ReportPanel.currentPanel = new ReportPanel(panel, sourcePath, configPath);
     }
 }

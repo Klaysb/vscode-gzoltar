@@ -29,8 +29,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	vscode.commands.registerCommand('gzoltar.reset', async () => { await commander.reset(toolsPath); });
 
 	vscode.commands.registerCommand('gzoltar.run', async () => await commander.run());
-
-	vscode.commands.registerCommand('gzoltar.show', async () => await commander.showViews(toolsPath));
 }
 
 export function deactivate() { }

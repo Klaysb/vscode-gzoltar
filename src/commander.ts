@@ -28,7 +28,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         vscode.workspace.onDidSaveTextDocument((e: vscode.TextDocument) => {
             this.docChanged = true;
         });
-
+        
         vscode.workspace.onDidCreateFiles((e: vscode.FileCreateEvent) => {
             this.docChanged = true;
         });
@@ -68,7 +68,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         await this.runTests();
         await this.report();
         await this.rankings();
-        this.docChanged = false;
+        await this.showViews();
         vscode.window.showInformationMessage('Run Completed.');
     }
 
@@ -105,12 +105,12 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         const decorator = Decorator.createDecorator(ranking, this.extensionPath);
     }
 
-    async showViews(toolspath: string) {
+    async showViews() {
         if (this.docChanged) {
             await this.run();
         }
         
-        ReportPanel.createOrShow(toolspath, this.configPath);
+        ReportPanel.createOrShow(this.fileMaster.getSourceFolder(), this.configPath);
     }
 }
 

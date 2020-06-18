@@ -40,9 +40,8 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
 
     buildCommander(): GZoltarCommand[] {
         const runTestCommand = new GZoltarCommand('Run GZoltar', vscode.TreeItemCollapsibleState.None, { command: 'gzoltar.run', title: 'Run GZoltar' });
-        const showViewCommand = new GZoltarCommand('Show Views', vscode.TreeItemCollapsibleState.None, { command: 'gzoltar.show', title: 'Show Views' });
         const resetCommand = new GZoltarCommand('Reset Config', vscode.TreeItemCollapsibleState.None, { command: 'gzoltar.reset', title: 'Reset Config' });
-        return [runTestCommand, showViewCommand, resetCommand];
+        return [runTestCommand, resetCommand];
     }
 
     getTreeItem(element: GZoltarCommand): vscode.TreeItem | Thenable<vscode.TreeItem> {
@@ -57,7 +56,6 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     }
 
     async reset(toolspath: string) {
-        this.docChanged = true;
         await this.fileMaster.resetConfig(toolspath);
         vscode.window.showInformationMessage('Reset Completed.');
     }
@@ -106,10 +104,6 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     }
 
     async showViews() {
-        if (this.docChanged) {
-            await this.run();
-        }
-        
         ReportPanel.createOrShow(this.fileMaster.getSourceFolder(), this.configPath);
     }
 }

@@ -4,7 +4,7 @@ import * as fse from 'fs-extra';
 import { join } from 'path';
 import { ReportPanel } from '../reportPanel';
 import { Decorator } from '../decoration/decorator';
-import { BuildTool } from './build/buildTool';
+import { BuildTool } from './buildTool';
 
 export class Workspace {
 

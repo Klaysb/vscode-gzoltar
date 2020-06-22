@@ -1,10 +1,9 @@
 'use strict';
 
-import * as vscode from 'vscode';
 import * as fse from 'fs-extra';
 import { join } from 'path';
 import { Workspace } from './workspace';
-import { Maven, BuildTool, Gradle } from './build/buildTool';
+import { Maven, BuildTool, Gradle } from './buildTool';
 
 export class WSContainer {
 

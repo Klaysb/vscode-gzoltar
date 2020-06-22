@@ -50,7 +50,7 @@ export class ReportPanel {
         const split = String(label).split(reg);
         const file = join(split[1].replace(/\./g, sep), split[2]);
         const filename = join(this.workspacePath, 'src', 'main', 'java', file) + '.java';
-        vscode.workspace.openTextDocument(filename);
+        vscode.window.showTextDocument(vscode.Uri.file(filename), { viewColumn: vscode.ViewColumn.One });
     }
 
     private async setScript(filename: string, script: string): Promise<string> {

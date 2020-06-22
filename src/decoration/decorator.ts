@@ -6,8 +6,6 @@ import { Ranking, RankingLine, RankingGroup } from './ranking';
 
 export class Decorator {
 
-    private static currentDecorator: Decorator | undefined;
-
     private readonly rankings: Ranking;
     private readonly extensionPath: string;
     private readonly listener: vscode.Disposable;
@@ -57,15 +55,11 @@ export class Decorator {
 
     public dispose(): void {
         this.listener.dispose();
-        Decorator.currentDecorator = undefined;
     }
 
     public static createDecorator(rankingFile: string, extensionPath: string): Decorator {
-        if (Decorator.currentDecorator) {
-            Decorator.currentDecorator.dispose();
-        }
-
         let maxProbability = 0.0;
+        
         const ranking = rankingFile
             .split('\n')
             .slice(1)

@@ -3,39 +3,20 @@
 import * as vscode from 'vscode';
 import * as fse from 'fs-extra';
 import { join } from 'path';
-import { FileMaster } from './filemaster';
 import { listFunction, runFunction, reportFunction } from './cmdLine/cmdBuilder';
 import { ReportPanel } from './reportPanel';
 import { Decorator } from './decoration/decorator';
+import { Workspace } from './workspace/workspace';
 const exec = require('util').promisify(require('child_process').exec);
 
 export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand> {
 
     private readonly commands: GZoltarCommand[];
-    private readonly fileMaster: FileMaster;
-    private readonly configPath: string;
-    private readonly buildPath: string;
     private readonly extensionPath: string;
-    private docChanged: boolean = true;
 
-    constructor(fileMaster: FileMaster, extensionPath: string) {
-        this.fileMaster = fileMaster;
-        this.configPath = fileMaster.getConfig();
-        this.buildPath = join(this.configPath, 'build');
+    constructor(extensionPath: string) {
         this.extensionPath = extensionPath;
         this.commands = this.buildCommander();
-
-        vscode.workspace.onDidSaveTextDocument((e: vscode.TextDocument) => {
-            this.docChanged = true;
-        });
-        
-        vscode.workspace.onDidCreateFiles((e: vscode.FileCreateEvent) => {
-            this.docChanged = true;
-        });
-
-        vscode.workspace.onDidDeleteFiles((e: vscode.FileDeleteEvent) => {
-            this.docChanged = true;
-        });
     }
 
     buildCommander(): GZoltarCommand[] {
@@ -55,56 +36,26 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         return Promise.resolve(element.children);
     }
 
-    async reset(toolspath: string) {
-        await this.fileMaster.resetConfig(toolspath);
+    async reset(workspace: Workspace, toolspath: string) {
+        await workspace.resetConfig(toolspath);
         vscode.window.showInformationMessage('Reset Completed.');
     }
 
-    async run() {
-        await this.cleanup();
-        await this.list();
-        await this.runTests();
-        await this.report();
-        await this.rankings();
-        await this.showViews();
-        vscode.window.showInformationMessage('Run Completed.');
-    }
+    async run(workspace: Workspace) {
+        await workspace.cleanup();
+        await workspace.copyToBuild();
+        
+        const configPath = workspace.configPath;
+        const includes = await workspace.getIncludes();
+        const dependencies = await workspace.getDependencies();
 
-    private async cleanup(): Promise<void> {
-        await Promise.all([
-            fse.emptyDir(this.buildPath),
-            fse.emptyDir(join(this.configPath, 'sfl')),
-            fse.remove(join(this.configPath, 'tests.txt')),
-            fse.remove(join(this.configPath, 'gzoltar.ser'))
-        ]);
-    }
+        await exec(listFunction(configPath, dependencies, workspace.testFolder));
+        await exec(runFunction(configPath, dependencies, includes));
+        await exec(reportFunction(configPath));
 
-    private async list(): Promise<void> {
-        await this.fileMaster.copySourcesTo(this.buildPath);
-        return exec(listFunction(this.configPath, this.buildPath))
-            .catch((_err: any) => { });
-    }
-
-    private async runTests(): Promise<void> {
-        const includes = await this.fileMaster.getIncludes();
-        return exec(runFunction(this.configPath, includes))
-            .catch((_err: any) => { });
-    }
-
-    private async report(): Promise<void> {
-        return exec(reportFunction(this.configPath))
-            .catch((_e: Error) => { 
-                const a = '';
-            });
-    }
-
-    private async rankings(): Promise<void> {
-        const ranking = (await fse.readFile(join(this.configPath, 'sfl', 'txt', 'ochiai.ranking.csv'))).toString();
-        const decorator = Decorator.createDecorator(ranking, this.extensionPath);
-    }
-
-    async showViews() {
-        ReportPanel.createOrShow(this.fileMaster.getSourceFolder(), this.configPath);
+        const ranking = (await fse.readFile(join(configPath, 'sfl', 'txt', 'ochiai.ranking.csv'))).toString();
+        workspace.setDecorator(Decorator.createDecorator(ranking, this.extensionPath));
+        workspace.setWebview(ReportPanel.createOrShow(configPath, workspace.workspacePath));
     }
 }
 

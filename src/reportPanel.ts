@@ -6,18 +6,17 @@ import { join, sep } from 'path';
 
 export class ReportPanel {
 
-    private static currentPanel: ReportPanel | undefined;
     private static readonly viewType = 'report';
 
     private readonly panel: vscode.WebviewPanel;
     private readonly configPath: string;
-    private readonly sourcePath: string;
+    private readonly workspacePath: string;
     private disposables: vscode.Disposable[] = [];
 
-    private constructor(panel: vscode.WebviewPanel, sourcePath: string, configPath: string) {
+    private constructor(panel: vscode.WebviewPanel, configPath: string, workspacePath: string) {
         this.panel = panel;
-        this.sourcePath = sourcePath;
         this.configPath = configPath;
+        this.workspacePath = workspacePath;
         this.update();
         this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
     }
@@ -37,17 +36,21 @@ export class ReportPanel {
                     this.panel.webview.html = views[message.index];
                     return;
                 case 'open':
-                    const reg = /(.+)\$(.+)\#(.+)\:(.+)/;
-                    const split = String(message.label).split(reg);
-                    const filename = join(split[1].replace(/\./g, sep), split[2]);
-                    const file = join(this.sourcePath, filename) + '.java';
-                    vscode.workspace.openTextDocument(filename);
+                    this.openDoc(message.label);
                     return;
             }
 
         });
 
         this.panel.webview.html = views[0];
+    }
+
+    private openDoc(label: string): void {
+        const reg = /(.+)\$(.+)\#(.+)\:(.+)/;
+        const split = String(label).split(reg);
+        const file = join(split[1].replace(/\./g, sep), split[2]);
+        const filename = join(this.workspacePath, 'src', 'main', 'java', file) + '.java';
+        vscode.workspace.openTextDocument(filename);
     }
 
     private async setScript(filename: string, script: string): Promise<string> {
@@ -59,7 +62,6 @@ export class ReportPanel {
     }
 
     public dispose() {
-        ReportPanel.currentPanel = undefined;
         this.panel.dispose();
 
         while (this.disposables.length) {
@@ -70,18 +72,11 @@ export class ReportPanel {
         }
     }
 
-    public static createOrShow(sourcePath: string, configPath: string) {
-        const column = vscode.ViewColumn.Beside;
-
-        if (ReportPanel.currentPanel) {
-            ReportPanel.currentPanel.panel.reveal(column);
-            return;
-        }
-
+    public static createOrShow(configPath: string, workspacePath: string): ReportPanel {
         const panel = vscode.window.createWebviewPanel(
             ReportPanel.viewType,
             'GZoltar Reports',
-            column,
+            vscode.ViewColumn.Beside,
             {
                 enableScripts: true,
                 localResourceRoots: [
@@ -90,6 +85,6 @@ export class ReportPanel {
             }
         );
 
-        ReportPanel.currentPanel = new ReportPanel(panel, sourcePath, configPath);
+        return new ReportPanel(panel, configPath, workspacePath);
     }
 }

@@ -4,24 +4,24 @@ import { Command } from "./command";
 
 export { listFunction, runFunction, reportFunction };
 
-function listFunction(destPath: string, buildPath: string): string {
+function listFunction(destPath: string, dependencies: string, testFolder: string): string {
     return new Command()
         .cd(destPath)
         .newCmd()
         .java()
         .javaagent('"gzoltaragent.jar"')
-        .cp(`"${buildPath}"`, '"hamcrest-core-2.2.jar"', '"gzoltarcli.jar"')
-        .main(`com.gzoltar.cli.Main listTestMethods ${buildPath}`)
+        .cp('"build/"', dependencies, '"hamcrest-core-2.2.jar"', '"gzoltarcli.jar"')
+        .main(`com.gzoltar.cli.Main listTestMethods ${testFolder}`)
         .toString();
 }
 
-function runFunction(destPath: string, includes: string): string {
+function runFunction(destPath: string, dependencies: string, includes: string): string {
     return new Command()
         .cd(destPath)
         .newCmd()
         .java()
         .javaagent(`gzoltaragent.jar=includes="${includes}"`)
-        .cp('"build/"', '"junit-4.13.jar"', '"hamcrest-core-2.2.jar"', '"gzoltarcli.jar"')
+        .cp('"build/"', dependencies, '"junit-4.13.jar"', '"hamcrest-core-2.2.jar"', '"gzoltarcli.jar"')
         .main(`com.gzoltar.cli.Main runTestMethods --testMethods "tests.txt" --collectCoverage`)
         .toString();
 }

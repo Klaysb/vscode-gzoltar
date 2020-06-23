@@ -33,6 +33,8 @@ class Maven implements BuildTool {
 
 class Gradle implements BuildTool {
 
+    private readonly REGEX = /(?:\\\-\-\-|\+\-\-\-)(.+)/;
+
     getSourceFolder(): string {
         return '/build/classes/java/main';
     }
@@ -41,8 +43,13 @@ class Gradle implements BuildTool {
         return '/build/classes/java/test';
     }
 
-    getDependencies(projectPath: string): Promise<string> {
-        throw new Error("Method not implemented.");
+    async getDependencies(projectPath: string): Promise<string> {
+        const res: { stdout: string } = await exec(`(cd ${projectPath} && gradle -q dependencies --configuration testRuntimeClasspath)`);
+        const split = res.stdout.split(this.REGEX);
+        return split
+            .filter((_, idx) => idx % 2 !== 0)
+            .map(s => `"${s.trim()}"`)
+            .join(':');
     }
 
 }

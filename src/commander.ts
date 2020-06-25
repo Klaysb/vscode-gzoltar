@@ -6,7 +6,6 @@ import { join, basename } from 'path';
 import { listFunction, runFunction, reportFunction } from './cmdLine/cmdBuilder';
 import { ReportPanel } from './reportPanel';
 import { Decorator } from './decoration/decorator';
-import { Folder } from './workspace/folder';
 import { FolderContainer } from './workspace/container';
 const exec = require('util').promisify(require('child_process').exec);
 
@@ -33,16 +32,16 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
 
     getChildren(element?: GZoltarCommand | undefined): vscode.ProviderResult<GZoltarCommand[]> {
         if (!element) {
-            return Promise.resolve([
+            return [
                 new GZoltarCommand('OPEN FOLDERS', vscode.TreeItemCollapsibleState.Expanded),
                 new GZoltarCommand('GZOLTAR OPTIONS', vscode.TreeItemCollapsibleState.Expanded)
-            ]);
+            ];
         }
 
         if (element.label === 'OPEN FOLDERS') {
-            return Promise.resolve(this.container.getFolders().map(path => {
-                return new GZoltarCommand(basename(path), vscode.TreeItemCollapsibleState.None, path);
-            }));
+            return this.container.getFolders().map(path => 
+                new GZoltarCommand(basename(path), vscode.TreeItemCollapsibleState.None, path)
+            );
         }
     }
 
@@ -70,7 +69,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
 
         const ranking = (await fse.readFile(rankingPath)).toString();
         folder.setDecorator(Decorator.createDecorator(ranking, this.extensionPath));
-        folder.setWebview(ReportPanel.createOrShow(configPath, folder.folderPath));
+        folder.setWebview(ReportPanel.createPanel(configPath, folder.folderPath));
     }
 }
 
@@ -81,11 +80,10 @@ export class GZoltarCommand extends vscode.TreeItem {
     constructor(
         public readonly label: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-        public readonly path?: string,
-        public readonly command?: vscode.Command
+        public readonly path?: string
     ) {
         super(label, collapsibleState);
     }
 
-    contextValue = 'gz';
+    contextValue = this.path? 'folder' : '';
 }

@@ -9,7 +9,6 @@ function listFunction(destPath: string, dependencies: string, testFolder: string
         .cd(destPath)
         .newCmd()
         .java()
-        .javaagent('"gzoltaragent.jar"')
         .cp('"build/"', dependencies, '"hamcrest-core-2.2.jar"', '"gzoltarcli.jar"')
         .main(`com.gzoltar.cli.Main listTestMethods ${testFolder}`)
         .toString();

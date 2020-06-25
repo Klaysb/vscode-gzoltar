@@ -4,7 +4,6 @@ import * as vscode from 'vscode';
 import { join } from 'path';
 import { FolderContainer } from './workspace/container';
 import { GZoltarCommander, GZoltarCommand } from './commander';
-import { pathExists } from 'fs-extra';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -17,12 +16,12 @@ export async function activate(context: vscode.ExtensionContext) {
 	const container = new FolderContainer(toolsPath, folders);
 	const commander = new GZoltarCommander(context.extensionPath, container);
 
-	vscode.workspace.onDidChangeWorkspaceFolders(async (ev) => {
+	context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (ev) => {
 		const addedFolders = ev.added.map(wf => wf.uri.fsPath);
 		const removedFolders = ev.removed.map(wf => wf.uri.fsPath);
 		await container.updateFolders(addedFolders, removedFolders);
 		commander.refresh();
-	});
+	}));
 
 	vscode.window.registerTreeDataProvider('gzoltar', commander);
 	vscode.commands.registerCommand('gzoltar.refresh', () => commander.refresh());

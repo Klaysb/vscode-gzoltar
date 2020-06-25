@@ -68,12 +68,12 @@
 			"view/item/context": [
 				{
 					"command": "gzoltar.run",
-					"when": "view == gzoltar && viewItem == gz",
+					"when": "view == gzoltar && viewItem == folder",
 					"group": "inline"
 				},
 				{
 					"command": "gzoltar.reset",
-					"when": "view == gzoltar && viewItem == gz"
+					"when": "view == gzoltar && viewItem == folder"
 				}
 			]
 		}

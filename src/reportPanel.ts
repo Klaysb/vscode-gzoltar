@@ -39,7 +39,6 @@ export class ReportPanel {
                     this.openDoc(message.label);
                     return;
             }
-
         });
 
         this.panel.webview.html = views[0];
@@ -72,7 +71,7 @@ export class ReportPanel {
         }
     }
 
-    public static createOrShow(configPath: string, workspacePath: string): ReportPanel {
+    public static createPanel(configPath: string, workspacePath: string): ReportPanel {
         const panel = vscode.window.createWebviewPanel(
             ReportPanel.viewType,
             'GZoltar Reports',

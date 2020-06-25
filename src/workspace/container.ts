@@ -36,7 +36,10 @@ export class FolderContainer {
     }
 
     private removeFolders(removedWorkspaces: string[]) {
-        removedWorkspaces.forEach(w => delete this.folders[w]);
+        removedWorkspaces.forEach(w => {
+            this.folders[w].dispose();
+            delete this.folders[w];
+        });
     }
 
     private async createFolder(path: string): Promise<void> {

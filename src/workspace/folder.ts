@@ -12,8 +12,8 @@ export class Folder {
     private readonly buildTool: BuildTool;
     private readonly configFolder: string;
 
-    private webview: ReportPanel | undefined;
-    private decorator: Decorator | undefined;
+    private webview?: ReportPanel;
+    private decorator?: Decorator;
 
     public constructor(path: string, buildTool: BuildTool, configFolder: string) {
         this.path = path;
@@ -45,6 +45,11 @@ export class Folder {
     public setDecorator(newDecorator: Decorator): void {
         this.decorator?.dispose();
         this.decorator = newDecorator;
+    }
+
+    public dispose(): void {
+        this.webview?.dispose();
+        this.decorator?.dispose();
     }
 
     public async resetConfig(toolsPath: string): Promise<void> {

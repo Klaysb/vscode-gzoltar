@@ -2,56 +2,64 @@
 
 import * as fse from 'fs-extra';
 import { join } from 'path';
-import { Workspace } from './workspace';
+import { Folder } from './folder';
 import { Maven, BuildTool, Gradle } from './buildTool';
 
-export class WSContainer {
+export class FolderContainer {
 
     private static readonly CONFIG_FOLDER: string = '.gzoltar/';
-    private static readonly CONFIG_FILE: string = 'folders.txt';
 
-    private readonly workspaces: { [key: string]: Workspace };
+    private readonly toolsPath: string;
+    private readonly folders: { [key: string]: Folder };
 
-    public constructor() {
-        this.workspaces = {};
+    public constructor(toolsPath: string, folders: string[]) {
+        this.toolsPath = toolsPath;
+        this.folders = {};
+        this.addFolders(folders);
     }
 
-    public getWorkspace(key: string): Workspace {
-        return this.workspaces[key];
+    public getFolder(key: string): Folder {
+        return this.folders[key];
     }
 
-    public addWorkspaces(newWorkspaces: string[], toolsPath: string) {
-        newWorkspaces.forEach(async w => {
-            return this.workspaces[w] = await this.createWorkspace(w, toolsPath);
-        });
+    public getFolders(): string[] {
+        return Object.keys(this.folders);
+    }
+    
+    public async updateFolders(addedFolders: string[], removedFolders: string[]): Promise<void> {
+        this.removeFolders(removedFolders);
+        await this.addFolders(addedFolders);
     }
 
-    public removeWorkspaces(oldWorkspaces: string[]) {
-        oldWorkspaces.forEach(w => {
-            delete this.workspaces[w];
-        });
+    private async addFolders(addedFolders: string[]): Promise<void> {
+        await Promise.all(addedFolders.map(w => this.createFolder(w)));
     }
 
-    private async createWorkspace(path: string, toolsPath: string): Promise<Workspace> {
-        const configFolderPath = join(path, WSContainer.CONFIG_FOLDER);
-        const configFilePath = join(configFolderPath, WSContainer.CONFIG_FILE);
+    private removeFolders(removedWorkspaces: string[]) {
+        removedWorkspaces.forEach(w => delete this.folders[w]);
+    }
+
+    private async createFolder(path: string): Promise<void> {
+        const configFolderPath = join(path, FolderContainer.CONFIG_FOLDER);
+        const tool = this.getBuildTool(path);
+
+        if (!tool) {
+            return;
+        }
 
         if (!(await fse.pathExists(configFolderPath))) {
-            await fse.copy(toolsPath, configFolderPath, { overwrite: false });
+            await fse.copy(this.toolsPath, configFolderPath, { overwrite: false });
         }
 
-        const tool = this.getBuildTool(path);
-        return new Workspace(path, tool, configFolderPath, configFilePath);
+        this.folders[path] = new Folder(path, tool, configFolderPath);
     }
 
-    private getBuildTool(workspace: string): BuildTool {
-        if (fse.pathExistsSync(join(workspace, 'pom.xml'))) {
+    private getBuildTool(folder: string): BuildTool | undefined {
+        if (fse.pathExistsSync(join(folder, 'pom.xml'))) {
             return new Maven();
         }
-        if (fse.pathExistsSync(join(workspace, 'build.gradle'))) {
+        if (fse.pathExistsSync(join(folder, 'build.gradle'))) {
             return new Gradle();
         }
-
-        throw new Error('Build tool not found.');
     }
 }

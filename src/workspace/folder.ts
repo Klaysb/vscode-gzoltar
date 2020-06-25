@@ -6,24 +6,22 @@ import { ReportPanel } from '../reportPanel';
 import { Decorator } from '../decoration/decorator';
 import { BuildTool } from './buildTool';
 
-export class Workspace {
+export class Folder {
 
     private readonly path: string;
     private readonly buildTool: BuildTool;
     private readonly configFolder: string;
-    private readonly configFile: string;  
 
     private webview: ReportPanel | undefined;
     private decorator: Decorator | undefined;
 
-    public constructor(path: string, buildTool: BuildTool, configFolder: string, configFile: string) {
+    public constructor(path: string, buildTool: BuildTool, configFolder: string) {
         this.path = path;
         this.buildTool = buildTool;
         this.configFolder = configFolder;
-        this.configFile = configFile;
     }
 
-    get workspacePath(): string {
+    get folderPath(): string {
         return this.path;
     }
 
@@ -49,20 +47,9 @@ export class Workspace {
         this.decorator = newDecorator;
     }
 
-    public async setSourceFolder(newSrcFolder: string): Promise<void> {
-        //this.srcFolder = newSrcFolder.replace(this.path, '');
-        //return fse.writeFile(this.configFile, `${this.srcFolder}\n${this.tstFolder}`);
-    }
-
-    public async setTestFolder(newTestFolder: string): Promise<void> {
-        //this.tstFolder = newTestFolder.replace(this.path, '');
-        //return fse.writeFile(this.configFile, `${this.srcFolder}\n${this.tstFolder}`);
-    }
-
     public async resetConfig(toolsPath: string): Promise<void> {
         await fse.emptyDir(this.configFolder);
         await fse.copy(toolsPath, this.configFolder, { overwrite: false });
-        await fse.writeFile(this.configFile, `${this.buildTool.getSourceFolder()}\n${this.buildTool.getTestFolder()}`);
     }
 
     public async cleanup(): Promise<void> {

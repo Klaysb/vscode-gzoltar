@@ -17,20 +17,6 @@
 	],
 	"main": "./out/extension.js",
 	"contributes": {
-		"menus": {
-			"explorer/context": [
-				{
-					"command": "gzoltar.setsource",
-					"group": "gzoltar",
-					"when": "explorerResourceIsFolder"
-				},
-				{
-					"command": "gzoltar.settest",
-					"group": "gzoltar",
-					"when": "explorerResourceIsFolder"
-				}
-			]
-		},
 		"viewsContainers": {
 			"activitybar": [
 				{
@@ -44,36 +30,53 @@
 			"gzoltar-commands": [
 				{
 					"id": "gzoltar",
-					"name": "Commands"
+					"name": "Commands",
+					"icon": "media/dep.svg"
 				}
 			]
 		},
 		"commands": [
 			{
-				"command": "gzoltar.setsource",
-				"title": "GZoltar: Set Source Folder"
-			},
-			{
-				"command": "gzoltar.settest",
-				"title": "GZoltar: Set Test Folder"
+				"command": "gzoltar.refresh",
+				"title": "Refresh",
+				"icon": {
+					"light": "resources/light/refresh.svg",
+					"dark": "resources/dark/refresh.svg"
+				}
 			},
 			{
 				"command": "gzoltar.run",
 				"title": "Run GZoltar",
 				"icon": {
-					"light": "resources/light/boolean.svg",
-					"dark": "resources/dark/boolean.svg"
+					"light": "resources/light/edit.svg",
+					"dark": "resources/dark/edit.svg"
 				}
 			},
 			{
 				"command": "gzoltar.reset",
-				"title": "Reset Config Folder",
-				"icon": {
-					"light": "resources/light/refresh.svg",
-					"dark": "resources/dark/refresh.svg"
-				}
+				"title": "Reset Configuration"
 			}
-		]
+		],
+		"menus": {
+			"view/title": [
+				{
+					"command": "gzoltar.refresh",
+					"when": "view == gzoltar",
+					"group": "navigation"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "gzoltar.run",
+					"when": "view == gzoltar && viewItem == gz",
+					"group": "inline"
+				},
+				{
+					"command": "gzoltar.reset",
+					"when": "view == gzoltar && viewItem == gz"
+				}
+			]
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",

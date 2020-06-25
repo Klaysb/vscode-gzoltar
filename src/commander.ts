@@ -2,27 +2,29 @@
 
 import * as vscode from 'vscode';
 import * as fse from 'fs-extra';
-import { join } from 'path';
+import { join, basename } from 'path';
 import { listFunction, runFunction, reportFunction } from './cmdLine/cmdBuilder';
 import { ReportPanel } from './reportPanel';
 import { Decorator } from './decoration/decorator';
-import { Workspace } from './workspace/workspace';
+import { Folder } from './workspace/folder';
+import { FolderContainer } from './workspace/container';
 const exec = require('util').promisify(require('child_process').exec);
 
 export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand> {
 
-    private readonly commands: GZoltarCommand[];
+    private _onDidChangeTreeData: vscode.EventEmitter<GZoltarCommand | undefined> = new vscode.EventEmitter<GZoltarCommand | undefined>();
+    readonly onDidChangeTreeData: vscode.Event<GZoltarCommand | undefined> = this._onDidChangeTreeData.event;
+
     private readonly extensionPath: string;
+    private readonly container: FolderContainer;
 
-    constructor(extensionPath: string) {
+    constructor(extensionPath: string, container: FolderContainer) {
         this.extensionPath = extensionPath;
-        this.commands = this.buildCommander();
+        this.container = container;
     }
-
-    buildCommander(): GZoltarCommand[] {
-        const runTestCommand = new GZoltarCommand('Run GZoltar', vscode.TreeItemCollapsibleState.None, { command: 'gzoltar.run', title: 'Run GZoltar' });
-        const resetCommand = new GZoltarCommand('Reset Config', vscode.TreeItemCollapsibleState.None, { command: 'gzoltar.reset', title: 'Reset Config' });
-        return [runTestCommand, resetCommand];
+    
+    refresh(): void {
+        this._onDidChangeTreeData.fire();
     }
 
     getTreeItem(element: GZoltarCommand): vscode.TreeItem | Thenable<vscode.TreeItem> {
@@ -31,31 +33,44 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
 
     getChildren(element?: GZoltarCommand | undefined): vscode.ProviderResult<GZoltarCommand[]> {
         if (!element) {
-            return Promise.resolve(this.commands);
+            return Promise.resolve([
+                new GZoltarCommand('OPEN FOLDERS', vscode.TreeItemCollapsibleState.Expanded),
+                new GZoltarCommand('GZOLTAR OPTIONS', vscode.TreeItemCollapsibleState.Expanded)
+            ]);
         }
-        return Promise.resolve(element.children);
+
+        if (element.label === 'OPEN FOLDERS') {
+            return Promise.resolve(this.container.getFolders().map(path => {
+                return new GZoltarCommand(basename(path), vscode.TreeItemCollapsibleState.None, path);
+            }));
+        }
     }
 
-    async reset(workspace: Workspace, toolspath: string) {
-        await workspace.resetConfig(toolspath);
+    async reset(key: string, toolspath: string) {
+        const folder = this.container.getFolder(key);
+        await folder.resetConfig(toolspath);
         vscode.window.showInformationMessage('Reset Completed.');
     }
 
-    async run(workspace: Workspace) {
-        await workspace.cleanup();
-        await workspace.copyToBuild();
-        
-        const configPath = workspace.configPath;
-        const includes = await workspace.getIncludes();
-        const dependencies = await workspace.getDependencies();
+    async run(key: string) {
+        vscode.window.showInformationMessage('Run Initiated.');
+        const folder = this.container.getFolder(key);
 
-        await exec(listFunction(configPath, dependencies, workspace.testFolder));
+        await folder.cleanup();
+        await folder.copyToBuild();
+        
+        const configPath = folder.configPath;
+        const includes = await folder.getIncludes();
+        const dependencies = await folder.getDependencies();
+        const rankingPath = join(configPath, 'sfl', 'txt', 'ochiai.ranking.csv');
+
+        await exec(listFunction(configPath, dependencies, folder.testFolder));
         await exec(runFunction(configPath, dependencies, includes));
         await exec(reportFunction(configPath));
 
-        const ranking = (await fse.readFile(join(configPath, 'sfl', 'txt', 'ochiai.ranking.csv'))).toString();
-        workspace.setDecorator(Decorator.createDecorator(ranking, this.extensionPath));
-        workspace.setWebview(ReportPanel.createOrShow(configPath, workspace.workspacePath));
+        const ranking = (await fse.readFile(rankingPath)).toString();
+        folder.setDecorator(Decorator.createDecorator(ranking, this.extensionPath));
+        folder.setWebview(ReportPanel.createOrShow(configPath, folder.folderPath));
     }
 }
 
@@ -66,8 +81,11 @@ export class GZoltarCommand extends vscode.TreeItem {
     constructor(
         public readonly label: string,
         public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+        public readonly path?: string,
         public readonly command?: vscode.Command
     ) {
         super(label, collapsibleState);
     }
+
+    contextValue = 'gz';
 }

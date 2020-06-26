@@ -16,6 +16,11 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
 
     private readonly extensionPath: string;
     private readonly container: FolderContainer;
+    private readonly reportOptions: { [key: string]: boolean } = {
+        'Public Methods': true,
+        'Static Constructors': true,
+        'Deprecated Methods': true
+    };
 
     constructor(extensionPath: string, container: FolderContainer) {
         this.extensionPath = extensionPath;
@@ -26,6 +31,11 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         this._onDidChangeTreeData.fire();
     }
 
+    setOption(key: string): void {
+        this.reportOptions[key] = !this.reportOptions[key];
+        this.refresh();
+    }
+
     getTreeItem(element: GZoltarCommand): vscode.TreeItem | Thenable<vscode.TreeItem> {
         return element;
     }
@@ -34,7 +44,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         if (!element) {
             return [
                 new GZoltarCommand('OPEN FOLDERS', vscode.TreeItemCollapsibleState.Expanded),
-                new GZoltarCommand('GZOLTAR OPTIONS', vscode.TreeItemCollapsibleState.Expanded)
+                new GZoltarCommand('REPORT OPTIONS', vscode.TreeItemCollapsibleState.Expanded)
             ];
         }
 
@@ -42,6 +52,23 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
             return this.container.getFolders().map(path => 
                 new GZoltarCommand(basename(path), vscode.TreeItemCollapsibleState.None, path)
             );
+        }
+
+        if (element.label === 'REPORT OPTIONS') {
+            const lightPath = join(this.extensionPath, 'resources', 'light');
+            const darkPath = join(this.extensionPath, 'resources', 'dark');
+
+            return Object.keys(this.reportOptions).map(key => {
+                const active = this.reportOptions[key];
+                const gz = new GZoltarCommand(key, vscode.TreeItemCollapsibleState.None);
+                gz.tooltip = `Include ${key} in the Report.`;
+                gz.command = { command: 'extension.setOption', title: '', arguments: [key] };
+                gz.iconPath = {
+                    light: active? join(lightPath, 'checked.svg') : join(lightPath, 'unchecked.svg'),
+                    dark: active? join(darkPath, 'checked.svg') : join(darkPath, 'unchecked.svg')
+                };
+                return gz;
+            });
         }
     }
 
@@ -65,7 +92,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
 
         await exec(listFunction(configPath, dependencies, folder.testFolder));
         await exec(runFunction(configPath, dependencies, includes));
-        await exec(reportFunction(configPath));
+        await exec(reportFunction(configPath, this.reportOptions['Public Methods'], this.reportOptions['Static Constructors'], this.reportOptions['Deprecated Methods']));
 
         const ranking = (await fse.readFile(rankingPath)).toString();
         folder.setDecorator(Decorator.createDecorator(ranking, this.extensionPath));

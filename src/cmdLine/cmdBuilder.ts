@@ -25,12 +25,12 @@ function runFunction(destPath: string, dependencies: string, includes: string): 
         .toString();
 }
 
-function reportFunction(destPath: string): string {
+function reportFunction(destPath: string, publMethods: boolean, staticConstr: boolean, deprMethods: boolean): string {
     return new Command()
         .cd(destPath)
         .newCmd()
         .java()
         .cp('"."', '"gzoltarcli.jar"')
-        .main('com.gzoltar.cli.Main faultLocalizationReport --buildLocation "build/" --granularity "line" --dataFile gzoltar.ser --family "sfl" --formula "ochiai" --outputDirectory . --formatter HTML,TXT')
+        .main(`com.gzoltar.cli.Main faultLocalizationReport --buildLocation "build/" --dataFile gzoltar.ser --granularity "line" --family "sfl" --formula "ochiai" --outputDirectory . --formatter HTML,TXT`)
         .toString();
 }

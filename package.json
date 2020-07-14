@@ -48,8 +48,8 @@
 				"command": "gzoltar.run",
 				"title": "Run GZoltar",
 				"icon": {
-					"light": "resources/light/edit.svg",
-					"dark": "resources/dark/edit.svg"
+					"light": "resources/light/boolean.svg",
+					"dark": "resources/dark/boolean.svg"
 				}
 			},
 			{

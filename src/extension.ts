@@ -26,6 +26,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	vscode.window.registerTreeDataProvider('gzoltar', commander);
 	vscode.commands.registerCommand('gzoltar.refresh', () => commander.refresh());
 	vscode.commands.registerCommand('extension.setOption', (arg) => commander.setOption(arg));
+	vscode.commands.registerCommand('extension.setView', (path, index) => commander.setView(path, index));
 	vscode.commands.registerCommand('gzoltar.reset', async (cmd: GZoltarCommand) => await commander.reset(cmd.path!, toolsPath));
 	vscode.commands.registerCommand('gzoltar.run', async (cmd: GZoltarCommand) => await commander.run(cmd.path!));
 }

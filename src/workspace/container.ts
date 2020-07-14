@@ -22,8 +22,8 @@ export class FolderContainer {
         return this.folders[key];
     }
 
-    public getFolders(): string[] {
-        return Object.keys(this.folders);
+    public getFolders(): Folder[] {
+        return Object.values(this.folders);
     }
     
     public async updateFolders(addedFolders: string[], removedFolders: string[]): Promise<void> {

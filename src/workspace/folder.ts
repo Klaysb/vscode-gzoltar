@@ -5,6 +5,7 @@ import { join } from 'path';
 import { ReportPanel } from '../reportPanel';
 import { Decorator } from '../decoration/decorator';
 import { BuildTool } from './buildTool';
+import { Webview } from 'vscode';
 
 export class Folder {
 
@@ -37,9 +38,17 @@ export class Folder {
         return join(this.path, this.buildTool.getTestFolder());
     }
 
+    public getWebview(): ReportPanel | undefined {
+        return this.webview;
+    }
+
     public setWebview(newWebview: ReportPanel): void {
         this.webview?.dispose();
         this.webview = newWebview;
+    }
+
+    public resetWebview(): void {
+        this.webview = undefined;
     }
 
     public setDecorator(newDecorator: Decorator): void {
@@ -49,7 +58,9 @@ export class Folder {
 
     public dispose(): void {
         this.webview?.dispose();
+        this.webview = undefined;
         this.decorator?.dispose();
+        this.decorator = undefined;
     }
 
     public async resetConfig(toolsPath: string): Promise<void> {

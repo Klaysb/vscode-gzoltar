@@ -9,39 +9,35 @@ export class ReportPanel {
     private static readonly viewType = 'report';
 
     private readonly panel: vscode.WebviewPanel;
-    private readonly configPath: string;
     private readonly workspacePath: string;
+    private readonly views: string[];
     private disposables: vscode.Disposable[] = [];
+    private disposeListener?: () => any;
 
-    private constructor(panel: vscode.WebviewPanel, configPath: string, workspacePath: string) {
+    private constructor(panel: vscode.WebviewPanel, workspacePath: string, views: string[]) {
         this.panel = panel;
-        this.configPath = configPath;
         this.workspacePath = workspacePath;
-        this.update();
+        this.views = views;
+        this.update(0);
         this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
+        const lstnr = this.panel.webview.onDidReceiveMessage((message) => this.openDoc(message.label));
+        this.disposables.push(lstnr);
+    }
+    
+    public update(index: number): void {
+        this.panel.webview.html = this.views[index];
+        this.panel.reveal();
     }
 
-    private async update(): Promise<void> {
-        const viewPath = join(this.configPath, 'sfl', 'html', 'ochiai');
-        const scriptPathOnDisk = vscode.Uri.file(join(viewPath, "gzoltar.js"));
-        const scriptUri = this.panel.webview.asWebviewUri(scriptPathOnDisk);
+    public onDispose(listener: () => any): void {
+        this.disposeListener = listener;
+    }
 
-        const views = await Promise.all(
-            ['sunburst.html', 'bubblehierarchy.html', 'verticalpartition.html']
-                .map(s => this.setScript(join(viewPath, s), scriptUri.toString())));
-
-        this.panel.webview.onDidReceiveMessage((message) => {
-            switch (message.command) {
-                case 'switch':
-                    this.panel.webview.html = views[message.index];
-                    return;
-                case 'open':
-                    this.openDoc(message.label);
-                    return;
-            }
-        });
-
-        this.panel.webview.html = views[0];
+    public dispose(): void {
+        this.panel.dispose();
+        this.disposeListener?.();
+        this.disposables.forEach(d => d?.dispose());
+        this.disposables = [];
     }
 
     private openDoc(label: string): void {
@@ -52,38 +48,33 @@ export class ReportPanel {
         vscode.window.showTextDocument(vscode.Uri.file(filename), { viewColumn: vscode.ViewColumn.One });
     }
 
-    private async setScript(filename: string, script: string): Promise<string> {
-        const file = (await fse.readFile(filename)).toString();
-        const newHtml = file.replace(
-            '<script type="text/javascript" src="gzoltar.js"></script>',
-            `<script type="text/javascript" src="${script}"></script>`);
-        return newHtml;
-    }
-
-    public dispose() {
-        this.panel.dispose();
-
-        while (this.disposables.length) {
-            const x = this.disposables.pop();
-            if (x) {
-                x.dispose();
-            }
-        }
-    }
-
-    public static createPanel(configPath: string, workspacePath: string): ReportPanel {
+    public static async createPanel(configPath: string, workspacePath: string): Promise<ReportPanel> {
         const panel = vscode.window.createWebviewPanel(
             ReportPanel.viewType,
             'GZoltar Reports',
             vscode.ViewColumn.Beside,
             {
                 enableScripts: true,
-                localResourceRoots: [
-                    vscode.Uri.file(join(configPath, 'sfl'))
-                ]
+                localResourceRoots: [ vscode.Uri.file(join(configPath, 'sfl')) ]
             }
         );
 
-        return new ReportPanel(panel, configPath, workspacePath);
+        const viewPath = join(configPath, 'sfl', 'html', 'ochiai');
+        const scriptPathOnDisk = vscode.Uri.file(join(viewPath, "gzoltar.js"));
+        const scriptUri = panel.webview.asWebviewUri(scriptPathOnDisk);
+
+        const views = await Promise.all(
+            ['sunburst.html', 'bubblehierarchy.html', 'verticalpartition.html']
+                .map(s => this.setScript(join(viewPath, s), scriptUri.toString())));
+
+        return new ReportPanel(panel, workspacePath, views);
+    }
+
+    private static async setScript(filename: string, script: string): Promise<string> {
+        const file = (await fse.readFile(filename)).toString();
+        const newHtml = file.replace(
+            '<script type="text/javascript" src="gzoltar.js"></script>',
+            `<script type="text/javascript" src="${script}"></script>`);
+        return newHtml;
     }
 }

@@ -16,6 +16,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
 
     private readonly extensionPath: string;
     private readonly container: FolderContainer;
+    private readonly statusBar: vscode.StatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     private readonly reportOptions: { [key: string]: boolean } = {
         'Public Methods': true,
         'Static Constructors': true,
@@ -108,9 +109,9 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         const dependencies = await folder.getDependencies();
         const rankingPath = join(configPath, 'sfl', 'txt', 'ochiai.ranking.csv');
 
-        await exec(listFunction(configPath, dependencies, folder.testFolder));
-        await exec(runFunction(configPath, dependencies, includes));
-        await exec(reportFunction(configPath, this.reportOptions['Public Methods'], this.reportOptions['Static Constructors'], this.reportOptions['Deprecated Methods']));
+        await this.execCmd(listFunction(configPath, dependencies, folder.testFolder), 'GZ: Listing Test Methods');
+        await this.execCmd(runFunction(configPath, dependencies, includes), 'GZ: Running Test Methods');
+        await this.execCmd(reportFunction(configPath, this.reportOptions['Public Methods'], this.reportOptions['Static Constructors'], this.reportOptions['Deprecated Methods']), 'GZ: Generating Report');
 
         const ranking = (await fse.readFile(rankingPath)).toString();
         folder.setDecorator(Decorator.createDecorator(ranking, this.extensionPath));
@@ -121,6 +122,13 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         });
         folder.setWebview(panel);
         this.refresh();
+    }
+
+    private async execCmd(cmd: string, text: string): Promise<void> {
+        this.statusBar.text = text;
+        this.statusBar.show();
+        await exec(cmd);
+        this.statusBar.hide();
     }
 }
 

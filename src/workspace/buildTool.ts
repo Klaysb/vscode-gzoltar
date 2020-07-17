@@ -11,6 +11,7 @@ interface BuildTool {
     getSourceFolder(): string;
     getTestFolder(): string;
     getDependencies(projectPath: string): Promise<string>;
+    runTests(projectPath: string): Promise<void>;
     
 }
 
@@ -28,6 +29,10 @@ class Maven implements BuildTool {
         await exec(`(cd ${projectPath} && mvn dependency:build-classpath -Dmdep.outputFile="cp.txt")`);
         const dep = (await fse.readFile(join(projectPath, 'cp.txt'))).toString();
         return dep.replace('\n', ':');
+    }
+
+    async runTests(projectPath: string): Promise<void> {
+        await exec(`(cd ${projectPath} && mvn test)`);
     }
 }
 
@@ -52,4 +57,7 @@ class Gradle implements BuildTool {
             .join(':');
     }
 
+    async runTests(projectPath: string): Promise<void> {
+        await exec(`(cd ${projectPath} && gradle test)`);
+    }
 }

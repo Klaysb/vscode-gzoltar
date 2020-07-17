@@ -97,6 +97,10 @@ export class Folder {
         return this.buildTool.getDependencies(this.path);
     }
 
+    public async runTests(): Promise<void> {
+        return this.buildTool.runTests(this.path);
+    }
+
     public async getIncludes(): Promise<string> {
         return (await this.getFiles(this.sourceFolder, ''))
             .map(f => f.replace(/.class/g, ''))

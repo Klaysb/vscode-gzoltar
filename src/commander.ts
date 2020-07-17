@@ -103,6 +103,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         const folder = this.container.getFolder(key);
 
         await folder.cleanup();
+        await folder.runTests();
         await folder.copyToBuild();
         
         const configPath = folder.configPath;

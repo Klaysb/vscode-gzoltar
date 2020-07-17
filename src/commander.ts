@@ -93,6 +93,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
 
     async reset(key: string, toolspath: string) {
         const folder = this.container.getFolder(key);
+        folder.dispose();
         await folder.resetConfig(toolspath);
         vscode.window.showInformationMessage('Reset Completed.');
     }

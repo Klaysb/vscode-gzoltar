@@ -2,7 +2,7 @@
 
 import { Command } from "./command";
 
-export { listFunction, runFunction, reportFunction };
+export { listFunction, runFunction, reportFunction, disassemble };
 
 function listFunction(destPath: string, dependencies: string, testFolder: string): string {
     return new Command()
@@ -32,5 +32,13 @@ function reportFunction(destPath: string, publMethods: boolean, staticConstr: bo
         .java()
         .cp('"."', '"gzoltarcli.jar"')
         .main(`com.gzoltar.cli.Main faultLocalizationReport --buildLocation "build/" --dataFile gzoltar.ser --granularity "line" --family "sfl" --formula "ochiai" --outputDirectory . --formatter HTML,TXT`)
+        .toString();
+}
+
+function disassemble(destPath: string, classFile: string): string {
+    return new Command()
+        .cd(destPath)
+        .newCmd()
+        .javap(classFile)
         .toString();
 }

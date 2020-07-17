@@ -25,6 +25,11 @@ export class Command {
         return this;
     }
 
+    public javap(classFile: string): Command {
+        this.commands.push(`javap -verbose ${classFile}`);
+        return this;
+    }
+
     public javaagent(agentJar: string): Command {
         this.commands.push(`-javaagent:${agentJar}`);
         return this;

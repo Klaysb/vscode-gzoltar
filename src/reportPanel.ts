@@ -3,19 +3,26 @@
 import * as vscode from 'vscode';
 import * as fse from 'fs-extra';
 import { join, sep } from 'path';
+import { disassemble } from './cmdLine/cmdBuilder';
+const exec = require('util').promisify(require('child_process').exec);
 
 export class ReportPanel {
 
     private static readonly viewType = 'report';
 
+    private static readonly fileReg = /(.+)\$(.+)\#(.+)\:(.+)/;
+    private static readonly classReg = /SourceFile: "(.+)"/;
+
     private readonly panel: vscode.WebviewPanel;
+    private readonly configPath: string;
     private readonly workspacePath: string;
     private readonly views: string[];
     private disposables: vscode.Disposable[] = [];
     private disposeListener?: () => any;
 
-    private constructor(panel: vscode.WebviewPanel, workspacePath: string, views: string[]) {
+    private constructor(panel: vscode.WebviewPanel, configPath: string, workspacePath: string, views: string[]) {
         this.panel = panel;
+        this.configPath = configPath;
         this.workspacePath = workspacePath;
         this.views = views;
         this.update(0);
@@ -40,11 +47,16 @@ export class ReportPanel {
         this.disposables = [];
     }
 
-    private openDoc(label: string): void {
-        const reg = /(.+)\$(.+)\#(.+)\:(.+)/;
-        const split = String(label).split(reg);
-        const file = join(split[1].replace(/\./g, sep), split[2]);
-        const filename = join(this.workspacePath, 'src', 'main', 'java', file) + '.java';
+    private async openDoc(label: string): Promise<void> {
+        const fSplit = String(label).split(ReportPanel.fileReg);
+        const packageName = fSplit[1].replace(/\./g, sep);
+        const file = join(packageName, fSplit[2]);
+
+        const classFile = join('build', file) + '.class';
+        const dissassemble = await exec(disassemble(this.configPath, classFile));
+        const dSplit = dissassemble.stdout.split(ReportPanel.classReg);
+        
+        const filename = join(this.workspacePath, 'src', 'main', 'java', packageName, dSplit[1]);
         vscode.window.showTextDocument(vscode.Uri.file(filename), { viewColumn: vscode.ViewColumn.One });
     }
 
@@ -67,7 +79,7 @@ export class ReportPanel {
             ['sunburst.html', 'bubblehierarchy.html', 'verticalpartition.html']
                 .map(s => this.setScript(join(viewPath, s), scriptUri.toString())));
 
-        return new ReportPanel(panel, workspacePath, views);
+        return new ReportPanel(panel, configPath, workspacePath, views);
     }
 
     private static async setScript(filename: string, script: string): Promise<string> {

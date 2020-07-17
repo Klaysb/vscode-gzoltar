@@ -79,9 +79,18 @@ export class Folder {
 
     public async copyToBuild(): Promise<void> {
         const buildPath = join(this.configFolder, 'build');
-        const options = { overwrite: false };
+        const options = { overwrite: false, errorOnExist: false };
         await fse.copy(this.sourceFolder, buildPath, options);
         await fse.copy(this.testFolder, buildPath, options);
+
+        const mainRes = join('src', 'main', 'resources');
+        const testRes = join('src', 'test', 'resources');
+        if ((await fse.pathExists(join(this.path, mainRes)))) {
+            await fse.copy(join(this.path, mainRes), join(this.configFolder, mainRes), options);
+        }
+        if ((await fse.pathExists(join(this.path, testRes)))) {
+            await fse.copy(join(this.path, testRes), join(this.configFolder, testRes), options);
+        }
     }
 
     public async getDependencies(): Promise<string> {

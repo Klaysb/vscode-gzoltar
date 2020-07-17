@@ -1,7 +1,7 @@
 'use strict';
 
 import * as vscode from 'vscode';
-import { join } from 'path';
+import { join, sep } from 'path';
 import { Ranking, RankingLine, RankingGroup } from './ranking';
 
 export class Decorator {
@@ -40,17 +40,27 @@ export class Decorator {
 
     private setDecorations(editor: vscode.TextEditor): void {
         const document = editor.document;
-        const key = Object
+        const keys = Object
             .keys(this.rankings)
-            .find(key => document.fileName.includes(key));
+            .filter(key => {
+                const splitKey = key.split(sep);
+                return document.fileName.includes(key) ||
+                    document.getText().includes(`class ${splitKey[splitKey.length - 1]}`);
+            });
 
-        if (key) {
-            const group = this.rankings[key];
-            editor.setDecorations(this.lowDecor, group.low.map(l => ({ 'range': document.lineAt(l.getLine()).range })));
-            editor.setDecorations(this.mediumDecor, group.medium.map(l => ({ 'range': document.lineAt(l.getLine()).range })));
-            editor.setDecorations(this.highDecor, group.high.map(l => ({ 'range': document.lineAt(l.getLine()).range })));
-            editor.setDecorations(this.veryHighDecor, group.veryHigh.map(l => ({ 'range': document.lineAt(l.getLine()).range })));
+        const low = [], medium = [], high = [], veryHigh = [];
+        for (let idx = 0; idx < keys.length; idx++) {
+            const group = this.rankings[keys[idx]];
+            low.push(...group.low);
+            medium.push(...group.medium);
+            high.push(...group.high);
+            veryHigh.push(...group.veryHigh);
         }
+
+        editor.setDecorations(this.lowDecor, low.map(l => ({ 'range': document.lineAt(l.getLine()).range })));
+        editor.setDecorations(this.mediumDecor, medium.map(l => ({ 'range': document.lineAt(l.getLine()).range })));
+        editor.setDecorations(this.highDecor, high.map(l => ({ 'range': document.lineAt(l.getLine()).range })));
+        editor.setDecorations(this.veryHighDecor, veryHigh.map(l => ({ 'range': document.lineAt(l.getLine()).range })));
     }
 
     public dispose(): void {

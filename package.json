@@ -1,13 +1,20 @@
 {
 	"name": "vscode-gzoltar",
 	"displayName": "GZoltar",
-	"description": "",
-	"version": "0.0.1",
+	"description": "Automatic testing and fault localization for Java.",
+	"publisher": "GZoltar",
+	"version": "1.0.0",
+	"homepage": "https://gzoltar.com/",
+	"icon": "resources/gzoltar.png",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/GZoltar/gzoltar"
+	},
 	"engines": {
 		"vscode": "^1.42.0"
 	},
 	"categories": [
-		"Other"
+		"Debuggers"
 	],
 	"activationEvents": [
 		"workspaceContains:**/pom.xml",

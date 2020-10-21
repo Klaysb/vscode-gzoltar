@@ -77,7 +77,7 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
     }
 
     refresh(): void {
-        this._onDidChangeTreeData.fire();
+        this._onDidChangeTreeData.fire(undefined);
     }
 
     setOption(key: string): void {
@@ -102,8 +102,10 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         vscode.window.showInformationMessage('Run Initiated.');
         const folder = this.container.getFolder(key);
 
+        this.statusBar.text = 'GZoltar: Setting up';
+        this.statusBar.show();
+        await folder.runTests().catch(_ => { });
         await folder.cleanup();
-        await folder.runTests();
         await folder.copyToBuild();
         
         const configPath = folder.configPath;
@@ -111,9 +113,9 @@ export class GZoltarCommander implements vscode.TreeDataProvider<GZoltarCommand>
         const dependencies = await folder.getDependencies();
         const rankingPath = join(configPath, 'sfl', 'txt', 'ochiai.ranking.csv');
 
-        await this.execCmd(listFunction(configPath, dependencies, folder.testFolder), 'GZ: Listing Test Methods');
-        await this.execCmd(runFunction(configPath, dependencies, includes), 'GZ: Running Test Methods');
-        await this.execCmd(reportFunction(configPath, this.reportOptions['Public Methods'], this.reportOptions['Static Constructors'], this.reportOptions['Deprecated Methods']), 'GZ: Generating Report');
+        await this.execCmd(listFunction(configPath, dependencies, folder.testFolder), 'GZoltar: Listing Test Methods');
+        await this.execCmd(runFunction(configPath, dependencies, includes), 'GZoltar: Running Test Methods');
+        await this.execCmd(reportFunction(configPath, this.reportOptions['Public Methods'], this.reportOptions['Static Constructors'], this.reportOptions['Deprecated Methods']), 'GZoltar: Generating Report');
 
         const ranking = (await fse.readFile(rankingPath)).toString();
         folder.setDecorator(Decorator.createDecorator(ranking, this.extensionPath));

@@ -22,7 +22,7 @@
 				{
 					"id": "gzoltar-commands",
 					"title": "GZoltar",
-					"icon": "media/dep.svg"
+					"icon": "media/dep.png"
 				}
 			]
 		},
@@ -31,7 +31,7 @@
 				{
 					"id": "gzoltar",
 					"name": "Commands",
-					"icon": "media/dep.svg"
+					"icon": "media/dep.png"
 				}
 			]
 		},

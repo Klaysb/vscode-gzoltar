@@ -7,6 +7,7 @@ GZoltar is a framework for automatic testing and fault localization for Java pro
 * [Introduction](#introduction)
 * [Getting Started](#getting-started)
 * [Features](#features)
+* [Questions and Feedback](#questions-and-feedback)
 
 ## Introduction
 

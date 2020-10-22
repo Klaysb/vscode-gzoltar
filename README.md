@@ -31,7 +31,7 @@ Linux and MacOS users can immediately start using the extension if the previous 
 
 First step is to install a Windows subsystem for Linux of your choosing. As long as you are able to use a Linux terminal in your computer, it should be good to go. The next step is to install the extension [Remote - WSL](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl). This extension allows you to use Visual Studio Code to build Linux applications that run on the Windows Subsystem for Linux. After installing this extension, open a new window of VS Code and click on the green arrows in the bottom left corner to open a remote window.
 
-![Remote Dev Status Bar](resources/docs/remote-dev-status-bar.png)
+![Remote Dev Status Bar](https://github.com/Klaysb/vscode-gzoltar/blob/master/resources/docs/remote-dev-status-bar.png?raw=true)
 
 Now, you are able to start working with GZoltar just like you would with a regular VS Code window.
 
@@ -39,29 +39,29 @@ Now, you are able to start working with GZoltar just like you would with a regul
 
 To open GZoltar's menu, click on its icon in the activity bar.
 
-![GZoltar Activity Bar](resources/docs/barui.png)
+![GZoltar Activity Bar](https://github.com/Klaysb/vscode-gzoltar/blob/master/resources/docs/barui.png?raw=true)
 
 To run GZoltar on a project that is currently in your workspace, click on the icon next to the project's name.
 
-![GZoltar Commands](resources/docs/gcmds.png)
+![GZoltar Commands](https://github.com/Klaysb/vscode-gzoltar/blob/master/resources/docs/gcmds.png?raw=true)
 
 While GZoltar is running, you are able to see on the lower right corner of the status bar what phase it is currently on.
 
-![GZoltar Status Bar](resources/docs/statusbar.png)
+![GZoltar Status Bar](https://github.com/Klaysb/vscode-gzoltar/blob/master/resources/docs/statusbar.png?raw=true)
 
 After it's finished, a new window will appear showcasing the results of the fault detection analysis. The colors in the charts indicate the code's suspicion levels. Green means the segment has no suspicion, yellow is for medium likelihood, orange for high likelihood and red for very high likelihood. The further you zoom in into the chart, the finer grained it becomes. Meaning that at the beginning you are viewing the project in its entirety (at the root level), and at the deepest level you are viewing a single line of code.
 
-![GZoltar Results](resources/docs/result.png)
+![GZoltar Results](https://github.com/Klaysb/vscode-gzoltar/blob/master/resources/docs/result.png?raw=true)
 
 It is possible to navigate through the chart by double clicking on each segment. A right click will reset the chart back to its initial state. Clicking on an edge segment (which corresponds to a single line of code) will open the file associated with that line of code.
 
 You can also change the visualization that is currently being shown. On the activity bar menu, under the project that was just used to perform an analysis, you can choose one of the three charts to change the visualization to better suit your taste.
 
-![GZoltar Options](resources/docs/options.png)
+![GZoltar Options](https://github.com/Klaysb/vscode-gzoltar/blob/master/resources/docs/options.png?raw=true)
 
 When a file is opened after performing an analysis, it will show an icon to indicate the level of suspiciousness for each line of code. The icon's colors are the same as the ones represented in the charts.
 
-![GZoltar Open File](resources/docs/openfile.png)
+![GZoltar Open File](https://github.com/Klaysb/vscode-gzoltar/blob/master/resources/docs/openfile.png?raw=true)
 
 ## Questions and Feedback
 

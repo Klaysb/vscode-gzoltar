@@ -11,7 +11,7 @@
 		"url": "https://github.com/GZoltar/gzoltar"
 	},
 	"engines": {
-		"vscode": "^1.42.0"
+		"vscode": "^1.50.0"
 	},
 	"categories": [
 		"Debuggers"

@@ -7,6 +7,7 @@ GZoltar is a framework for automatic testing and fault localization for Java pro
 * [Introduction](#introduction)
 * [Getting Started](#getting-started)
 * [Features](#features)
+* [Compiling and Publishing](#compiling-and-publishing)
 * [Questions and Feedback](#questions-and-feedback)
 
 ## Introduction
@@ -62,6 +63,43 @@ You can also change the visualization that is currently being shown. On the acti
 When a file is opened after performing an analysis, it will show an icon to indicate the level of suspiciousness for each line of code. The icon's colors are the same as the ones represented in the charts.
 
 ![GZoltar Open File](https://github.com/Klaysb/vscode-gzoltar/blob/master/resources/docs/openfile.png?raw=true)
+
+## Compiling and Publishing
+
+Before compiling and attempting to work directly on the extension, ensure the following files are on the `tools` folder:
+
+```
+gzoltaragent.jar
+gzoltarcli.jar
+hamcrest-core-2.2.jar
+junit-4.13.jar
+```
+
+To compile the extension, run the command:
+
+```
+$ npm run compile
+```
+
+To package the extension into a VSIX file, run the command:
+
+```
+$ vsce package
+```
+
+There are two possible ways to publish the extension. Assuming you are a member of the GZoltar Publisher, you can obtain a Personal Access Token (PAT) in https://dev.azure.com. Then, you can use the command:
+
+```
+$ vsce login GZoltar
+Personal Access Token for publisher 'GZoltar': <insert your PAT>
+$ vsce publish
+```
+
+Alternatively, you can do both steps in one with the following command:
+
+```
+$ vsce publish -p <token>
+```
 
 ## Questions and Feedback
 
